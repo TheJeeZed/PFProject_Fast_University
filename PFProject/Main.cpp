@@ -5,7 +5,8 @@
 
 #include <iostream>
 
-const int ROW = 10, COL = 10;
+const int ROW = 50, COL = 50;
+
 
 using namespace std;
 
