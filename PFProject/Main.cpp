@@ -5,12 +5,37 @@
 
 #include <iostream>
 
-const int ROW = 50, COL = 50;
-
-
 using namespace std;
 
+const int ROW = 50, COL = 50;
+void placeWalls(char arr[][COL]) {
+	for (int i = 0; i < ROW; i++) {
+		for (int j = 0; j < COL; j++) {
+			if (i == 0 || i == COL - 1) {
+				arr[i][j] = '-';
+			}
+			else if (j == 0 || j == ROW - 1) {
+				arr[i][j] = '|';
+			}
+			else {
+				arr[i][j] = ' ';
+			}
+		}
+	}
+}
+void printMap(char arr[][COL]) {
+	for (int i = 0; i < ROW; i++) {
+		for (int j = 0; j < COL; j++) {
+			cout << arr[i][j];
+		}
+		cout << endl;
+	}
+}
+
 int main() {
+	char map[ROW][COL];
+	placeWalls(map);
+	printMap(map);
 	cout << "HelloWorld!";
 	system("pause");
 	return 0;
