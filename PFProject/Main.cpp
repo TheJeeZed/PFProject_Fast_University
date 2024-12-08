@@ -6,13 +6,17 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-
+#include <ctime>
+#include <stdlib.h>
+#include <Windows.h>
 
 using namespace std;
 
 const int ROW = 30, COL = 30, SCORES = 10;
+int Crow, Ccol;
 int highscores[SCORES] = { 0 };
-string names[SCORES] = { "NA","NA","NA","NA","NA","NA","NA","NA","NA","NA"};
+char map[ROW][COL];
+string names[SCORES] = {"NA","NA","NA","NA","NA","NA","NA","NA","NA","NA"};
 
 string nameInput() {
 	string name = "";
@@ -34,6 +38,7 @@ bool putScores() {
 		fout << names[i];
 		fout << " ";
 		fout << highscores[i];
+		fout << " ";
 	}
 	fout.close();
 	return true;
@@ -74,7 +79,7 @@ bool updateScores(int score,string name) {
 	}
 }
 //Places Walls Around the Perimeter
-void placeWalls(char map[][COL]) {
+void placeWalls() {
 	for (int i = 0; i < ROW; i++) {
 		for (int j = 0; j < COL; j++) {
 			if (i == 0 || i == COL - 1) {
@@ -90,7 +95,7 @@ void placeWalls(char map[][COL]) {
 	}
 }
 //Prints the entire map
-void printMap(char map[][COL]) {
+void printMap() {
 	for (int i = 0; i < ROW; i++) {
 		for (int j = 0; j < COL; j++) {
 			cout << map[i][j];
@@ -98,11 +103,25 @@ void printMap(char map[][COL]) {
 		cout << endl;
 	}
 }
+void placeCharacter() {
+	srand(time(0));
+	Crow = (rand() % (ROW / 2 - 2)) + ROW / 2;
+	Ccol = (rand() % (COL - 3) + 1);
+	map[Crow][Ccol] = '|';
+	map[Crow - 1][Ccol] = 'O';
+	map[Crow][Ccol - 1] = '/';
+	map[Crow + 1][Ccol - 1] = '/';
+	map[Crow][Ccol + 1] = '\\';
+	map[Crow + 1][Ccol + 1] = '\\';
+}
+void eventHandler() {
+
+}
 int main() {
 	string name = "";
-	char map[ROW][COL];
-	placeWalls(map);
-	printMap(map);
+	placeWalls();
+	placeCharacter();
+	printMap();
 	system("pause");
 	return 0;
 }
