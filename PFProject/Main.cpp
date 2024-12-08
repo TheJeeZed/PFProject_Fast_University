@@ -9,6 +9,7 @@
 #include <ctime>
 #include <stdlib.h>
 #include <Windows.h>
+#include <conio.h>
 
 using namespace std;
 
@@ -17,7 +18,7 @@ int Crow, Ccol;
 int highscores[SCORES] = { 0 };
 char map[ROW][COL];
 string names[SCORES] = {"NA","NA","NA","NA","NA","NA","NA","NA","NA","NA"};
-
+//name input for highscores
 string nameInput() {
 	string name = "";
 	cout << "Enter your name(8 character long with no spaces):";
@@ -78,8 +79,28 @@ bool updateScores(int score,string name) {
 		return false;
 	}
 }
-//Places Walls Around the Perimeter
-void placeWalls() {
+
+//Prints the entire map
+void printMap() {
+	for (int i = 0; i < ROW; i++) {
+		for (int j = 0; j < COL; j++) {
+			cout << map[i][j];
+		}
+		cout << endl;
+	}
+}
+//places the character with respect to its body
+void placeCharacter() {
+	map[Crow][Ccol] = '|';
+	map[Crow - 1][Ccol] = 'O';
+	map[Crow][Ccol - 1] = '/';
+	map[Crow + 1][Ccol - 1] = '/';
+	map[Crow][Ccol + 1] = '\\';
+	map[Crow + 1][Ccol + 1] = '\\';
+}
+//add initial items to the level
+void addItems() {
+	//for placing the outside boundries
 	for (int i = 0; i < ROW; i++) {
 		for (int j = 0; j < COL; j++) {
 			if (i == 0 || i == COL - 1) {
@@ -93,35 +114,70 @@ void placeWalls() {
 			}
 		}
 	}
-}
-//Prints the entire map
-void printMap() {
-	for (int i = 0; i < ROW; i++) {
-		for (int j = 0; j < COL; j++) {
-			cout << map[i][j];
-		}
-		cout << endl;
-	}
-}
-void placeCharacter() {
+	//to set up initial position of character
 	srand(time(0));
 	Crow = (rand() % (ROW / 2 - 2)) + ROW / 2;
 	Ccol = (rand() % (COL - 3) + 1);
-	map[Crow][Ccol] = '|';
-	map[Crow - 1][Ccol] = 'O';
-	map[Crow][Ccol - 1] = '/';
-	map[Crow + 1][Ccol - 1] = '/';
-	map[Crow][Ccol + 1] = '\\';
-	map[Crow + 1][Ccol + 1] = '\\';
+	placeCharacter();
 }
-void eventHandler() {
 
+void eventHandler(char action) {
+	switch (action) {
+	case 'W':
+	case 'w':
+		break;
+	case 'S':
+	case 's':
+		break;
+	case 'A':
+	case 'a':
+		break;
+	case 'D':
+	case 'd':
+		break;
+	case 72: //character for up arrow key
+		map[Crow + 1][Ccol - 1] = ' ';
+		map[Crow + 1][Ccol + 1] = ' ';
+		map[Crow][Ccol] = ' ';
+		Crow--;
+		placeCharacter();
+		break;
+	case 80: //character for down arrow key
+		map[Crow - 1][Ccol] = ' ';
+		map[Crow][Ccol - 1] = ' ';
+		map[Crow][Ccol + 1] = ' ';
+		Crow++;
+		placeCharacter();
+		break;
+	case 75: //character for right arrow key
+		map[Crow - 1][Ccol] = ' ';
+		map[Crow][Ccol + 1] = ' ';
+		map[Crow + 1][Ccol + 1] = ' ';
+		map[Crow + 1][Ccol - 1] = ' ';
+		Ccol--;
+		placeCharacter();
+		break;
+	case 77: //character for right arrow key
+		map[Crow - 1][Ccol] = ' ';
+		map[Crow][Ccol - 1] = ' ';
+		map[Crow + 1][Ccol - 1] = ' ';
+		map[Crow + 1][Ccol + 1] = ' ';
+		Ccol++;
+		placeCharacter();
+		break;
+	}
 }
 int main() {
+	char c;
 	string name = "";
-	placeWalls();
-	placeCharacter();
+	addItems();
 	printMap();
 	system("pause");
+	while (true) {
+		c = _getch();
+		system("cls");
+		eventHandler(c);
+		printMap();
+	}
 	return 0;
 }
