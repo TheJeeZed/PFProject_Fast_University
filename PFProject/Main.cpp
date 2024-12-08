@@ -101,6 +101,23 @@ void placeCharacter() {
 	map[Crow][Ccol + 1] = '\\';
 	map[Crow + 1][Ccol + 1] = '\\';
 }
+//placing soloman Lane! the boss of the game
+void placeBoss(int row,int col) {
+	map[row - 1][col] = ' ';
+	map[row][col] = 'X';
+	map[row + 1][col] = ' ';
+	map[row - 1][col + 1] = ']';
+	map[row][col + 1] = ']';
+	map[row + 1][col + 1] = ']';
+	map[row - 1][col - 1] = '[';
+	map[row][col - 1] = '[';
+	map[row + 1][col - 1] = '[';
+	map[row][col + 2] = '[';
+	map[row][col + 3] = ']';
+	map[row][col - 2] = ']';
+	map[row][col - 3] = '[';
+}
+
 //add initial items to the level
 void addItems() {
 	//for placing the outside walls 
@@ -117,11 +134,12 @@ void addItems() {
 			}
 		}
 	}
-	//to set up initial position of character
+	//to set up initial position of characters
 	srand(time(0));
 	Crow = (rand() % (ROW / 2 - 2)) + ROW / 2;
 	Ccol = (rand() % (COL - 3) + 1);
 	placeCharacter();
+	placeBoss(2,4);
 }
 //for summoning lasers in the game.both for player and bots
 void summonLaser(bool isplayer, char direction) {
@@ -142,23 +160,32 @@ void summonLaser(bool isplayer, char direction) {
 		}
 	}
 }
-//check if the player can move to the desired location
-bool isvalidMovelocation(char direction) {
-	switch (direction) {
-	case UP:
-		if (map[Crow - 2][Ccol - 1] != ' '||map[Crow - 2][Ccol] != ' '||map[Crow - 2][Ccol + 1] != ' ')
-			return 0;
+//check if the entity can move to the desired location
+//1 for player.2 for bullet
+bool isvalidMovelocation(int entity,char direction, int row = 0, int col = 0) {
+	switch (entity) {
+	case 1://for the player movement
+		switch (direction) {
+		case UP:
+			if (map[Crow - 2][Ccol - 1] != ' ' || map[Crow - 2][Ccol] != ' ' || map[Crow - 2][Ccol + 1] != ' ')
+				return 0;
+			break;
+		case DOWN:
+			if (map[Crow + 2][Ccol - 1] != ' ' || map[Crow + 2][Ccol] != ' ' || map[Crow + 2][Ccol + 1] != ' ')
+				return 0;
+			break;
+		case LEFT:
+			if (map[Crow - 1][Ccol - 2] != ' ' || map[Crow][Ccol - 2] != ' ' || map[Crow + 1][Ccol - 2] != ' ')
+				return 0;
+			break;
+		case RIGHT:
+			if (map[Crow - 1][Ccol + 2] != ' ' || map[Crow][Ccol + 2] != ' ' || map[Crow + 1][Ccol + 2] != ' ')
+				return 0;
+			break;
+		}
 		break;
-	case DOWN:
-		if (map[Crow + 2][Ccol - 1] != ' ' || map[Crow + 2][Ccol] != ' ' || map[Crow + 2][Ccol + 1] != ' ')
-			return 0;
-		break;
-	case LEFT:
-		if (map[Crow - 1][Ccol - 2] != ' ' || map[Crow][Ccol - 2] != ' ' || map[Crow + 1][Ccol - 2] != ' ')
-			return 0;
-		break;
-	case RIGHT:
-		if (map[Crow - 1][Ccol + 2] != ' ' || map[Crow][Ccol + 2] != ' ' || map[Crow + 1][Ccol + 2] != ' ')
+	case 2:
+		if (map[row][col] != ' ')
 			return 0;
 		break;
 	}
@@ -183,8 +210,8 @@ void eventHandler(char action) {
 	case 'd':
 		summonLaser(true, RIGHT);
 		break;
-	case UP: //character for up arrow key
-		if (isvalidMovelocation(UP)) {
+	case UP: 
+		if (isvalidMovelocation(1,UP)) {
 			map[Crow + 1][Ccol - 1] = ' ';
 			map[Crow + 1][Ccol + 1] = ' ';
 			map[Crow][Ccol] = ' ';
@@ -192,8 +219,8 @@ void eventHandler(char action) {
 			placeCharacter();
 		}
 		break;
-	case DOWN: //character for down arrow key
-		if (isvalidMovelocation(DOWN)) {
+	case DOWN:
+		if (isvalidMovelocation(1,DOWN)) {
 			map[Crow - 1][Ccol] = ' ';
 			map[Crow][Ccol - 1] = ' ';
 			map[Crow][Ccol + 1] = ' ';
@@ -201,8 +228,8 @@ void eventHandler(char action) {
 			placeCharacter();
 		}
 		break;
-	case LEFT: //character for right arrow key
-		if (isvalidMovelocation(LEFT)) {
+	case LEFT:
+		if (isvalidMovelocation(1,LEFT)) {
 			map[Crow - 1][Ccol] = ' ';
 			map[Crow][Ccol + 1] = ' ';
 			map[Crow + 1][Ccol + 1] = ' ';
@@ -211,8 +238,8 @@ void eventHandler(char action) {
 			placeCharacter();
 		}
 		break;
-	case RIGHT: //character for right arrow key
-		if (isvalidMovelocation(RIGHT)) {
+	case RIGHT:
+		if (isvalidMovelocation(1,RIGHT)) {
 			map[Crow - 1][Ccol] = ' ';
 			map[Crow][Ccol - 1] = ' ';
 			map[Crow + 1][Ccol - 1] = ' ';
@@ -220,6 +247,33 @@ void eventHandler(char action) {
 			Ccol++;
 			placeCharacter();
 			break;
+		}
+	}
+}
+//updates the game handling shooting of bullets and mocing of robots
+void tickUpdate() {
+	for (int i = 0; i < ROW; i++) {
+		for (int j = 0; j < COL; j++) {
+			if (map[i][j] == '^') {
+				map[i][j] = ' ';
+				if(isvalidMovelocation(2,UP,i - 1,j))
+					map[i - 1][j] = '^';
+			}
+			if (map[i][j] == '<') {
+				map[i][j] = ' ';
+				if (isvalidMovelocation(2, LEFT, i, j - 1))
+					map[i][j - 1] = '<';
+			}
+			if (map[ROW - 1 - i][COL - 1 - j] == 'v') {
+				map[ROW - 1 - i][COL - 1 - j] = ' ';
+				if (isvalidMovelocation(2, DOWN, ROW - i, COL - 1 - j))
+					map[ROW - i][COL - 1 - j] = 'v';
+			}
+			if (map[ROW - 1 - i][COL - 1 - j] == '>') {
+				map[ROW - 1 - i][COL - 1 - j] = ' ';
+				if (isvalidMovelocation(2, RIGHT, ROW - 1 - i, COL - j))
+					map[ROW - 1 - i][COL - j] = '>';
+			}
 		}
 	}
 }
@@ -232,6 +286,7 @@ void game() {
 		Input = _getch();
 		system("cls");
 		eventHandler(Input);
+		tickUpdate();
 	}
 }
 int main() {
