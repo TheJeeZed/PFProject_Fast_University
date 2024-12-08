@@ -13,7 +13,11 @@
 
 using namespace std;
 
+//directional constant for the arrow keys
+const char UP = 72, DOWN = 80, LEFT = 75, RIGHT = 77;
+//the size of map and number of highscores to store
 const int ROW = 30, COL = 30, SCORES = 10;
+//current location of the player
 int Crow, Ccol;
 int highscores[SCORES] = { 0 };
 char map[ROW][COL];
@@ -79,7 +83,6 @@ bool updateScores(int score,string name) {
 		return false;
 	}
 }
-
 //Prints the entire map
 void printMap() {
 	for (int i = 0; i < ROW; i++) {
@@ -100,7 +103,7 @@ void placeCharacter() {
 }
 //add initial items to the level
 void addItems() {
-	//for placing the outside boundries
+	//for placing the outside walls 
 	for (int i = 0; i < ROW; i++) {
 		for (int j = 0; j < COL; j++) {
 			if (i == 0 || i == COL - 1) {
@@ -120,64 +123,121 @@ void addItems() {
 	Ccol = (rand() % (COL - 3) + 1);
 	placeCharacter();
 }
-
+//for summoning lasers in the game.both for player and bots
+void summonLaser(bool isplayer, char direction) {
+	if (isplayer) {
+		switch (direction) {
+		case UP:
+			map[Crow - 2][Ccol] = '^';
+			break;
+		case DOWN:
+			map[Crow + 2][Ccol] = 'v';
+			break;
+		case LEFT:
+			map[Crow][Ccol - 2] = '<';
+			break;
+		case RIGHT:
+			map[Crow][Ccol + 2] = '>';
+			break;
+		}
+	}
+}
+//check if the player can move to the desired location
+bool isvalidMovelocation(char direction) {
+	switch (direction) {
+	case UP:
+		if (map[Crow - 2][Ccol - 1] != ' '||map[Crow - 2][Ccol] != ' '||map[Crow - 2][Ccol + 1] != ' ')
+			return 0;
+		break;
+	case DOWN:
+		if (map[Crow + 2][Ccol - 1] != ' ' || map[Crow + 2][Ccol] != ' ' || map[Crow + 2][Ccol + 1] != ' ')
+			return 0;
+		break;
+	case LEFT:
+		if (map[Crow - 1][Ccol - 2] != ' ' || map[Crow][Ccol - 2] != ' ' || map[Crow + 1][Ccol - 2] != ' ')
+			return 0;
+		break;
+	case RIGHT:
+		if (map[Crow - 1][Ccol + 2] != ' ' || map[Crow][Ccol + 2] != ' ' || map[Crow + 1][Ccol + 2] != ' ')
+			return 0;
+		break;
+	}
+	return 1;
+}
+//handles all the inputs entered by the user while playing the game
 void eventHandler(char action) {
 	switch (action) {
 	case 'W':
 	case 'w':
+		summonLaser(true, UP);
 		break;
 	case 'S':
 	case 's':
+		summonLaser(true, DOWN);
 		break;
 	case 'A':
 	case 'a':
+		summonLaser(true, LEFT);
 		break;
 	case 'D':
 	case 'd':
+		summonLaser(true, RIGHT);
 		break;
-	case 72: //character for up arrow key
-		map[Crow + 1][Ccol - 1] = ' ';
-		map[Crow + 1][Ccol + 1] = ' ';
-		map[Crow][Ccol] = ' ';
-		Crow--;
-		placeCharacter();
+	case UP: //character for up arrow key
+		if (isvalidMovelocation(UP)) {
+			map[Crow + 1][Ccol - 1] = ' ';
+			map[Crow + 1][Ccol + 1] = ' ';
+			map[Crow][Ccol] = ' ';
+			Crow--;
+			placeCharacter();
+		}
 		break;
-	case 80: //character for down arrow key
-		map[Crow - 1][Ccol] = ' ';
-		map[Crow][Ccol - 1] = ' ';
-		map[Crow][Ccol + 1] = ' ';
-		Crow++;
-		placeCharacter();
+	case DOWN: //character for down arrow key
+		if (isvalidMovelocation(DOWN)) {
+			map[Crow - 1][Ccol] = ' ';
+			map[Crow][Ccol - 1] = ' ';
+			map[Crow][Ccol + 1] = ' ';
+			Crow++;
+			placeCharacter();
+		}
 		break;
-	case 75: //character for right arrow key
-		map[Crow - 1][Ccol] = ' ';
-		map[Crow][Ccol + 1] = ' ';
-		map[Crow + 1][Ccol + 1] = ' ';
-		map[Crow + 1][Ccol - 1] = ' ';
-		Ccol--;
-		placeCharacter();
+	case LEFT: //character for right arrow key
+		if (isvalidMovelocation(LEFT)) {
+			map[Crow - 1][Ccol] = ' ';
+			map[Crow][Ccol + 1] = ' ';
+			map[Crow + 1][Ccol + 1] = ' ';
+			map[Crow + 1][Ccol - 1] = ' ';
+			Ccol--;
+			placeCharacter();
+		}
 		break;
-	case 77: //character for right arrow key
-		map[Crow - 1][Ccol] = ' ';
-		map[Crow][Ccol - 1] = ' ';
-		map[Crow + 1][Ccol - 1] = ' ';
-		map[Crow + 1][Ccol + 1] = ' ';
-		Ccol++;
-		placeCharacter();
-		break;
+	case RIGHT: //character for right arrow key
+		if (isvalidMovelocation(RIGHT)) {
+			map[Crow - 1][Ccol] = ' ';
+			map[Crow][Ccol - 1] = ' ';
+			map[Crow + 1][Ccol - 1] = ' ';
+			map[Crow + 1][Ccol + 1] = ' ';
+			Ccol++;
+			placeCharacter();
+			break;
+		}
+	}
+}
+void game() {
+	char Input;
+	addItems();
+	while (true) {
+		system("cls");
+		printMap();
+		Input = _getch();
+		system("cls");
+		eventHandler(Input);
 	}
 }
 int main() {
 	char c;
 	string name = "";
-	addItems();
-	printMap();
-	system("pause");
-	while (true) {
-		c = _getch();
-		system("cls");
-		eventHandler(c);
-		printMap();
-	}
+	name = nameInput();
+	game();
 	return 0;
 }
