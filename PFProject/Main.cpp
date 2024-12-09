@@ -19,6 +19,8 @@ const char UP = 72, DOWN = 80, LEFT = 75, RIGHT = 77;
 const int ROW = 30, COL = 30, SCORES = 10;
 //current location of the player
 int Crow, Ccol;
+int score = 0;
+string name = "";
 int highscores[SCORES] = { 0 };
 char map[ROW][COL];
 string names[SCORES] = {"NA","NA","NA","NA","NA","NA","NA","NA","NA","NA"};
@@ -126,8 +128,59 @@ void placeBot(int row, int col) {
 	map[row][col + 1] = ']';
 	map[row - 1][col + 1] = ']';
 }
-//add initial items to the level
-void addItems() {
+//validates and places an obstacle on the map
+void placeObstacle(int width,int count)
+{
+	// Seed the random number generator
+	srand(time(0));
+	bool isvalid;
+	int row, col;
+	for (int i = 1; i <= count; i++) {
+		do { // validating check. rerolling until a valid location is found
+			row = 1 + rand() % (ROW - 2);
+			col = 1 + rand() % (COL - 10);
+			isvalid = true;
+			for (int i = col; i <= col + width + 1; i++) {
+				if (map[row][i] != ' ') {
+					isvalid = false;
+					break;
+				}
+			}
+		} while (!isvalid);
+		//placing the obstacle after validating logic! 
+		map[row][col] = '[';
+		map[row][col + width + 1] = ']';
+		for (int i = col + 1; i <= col + width; i++) {
+			map[row][i] = '-';
+		}
+	}
+}
+void summonBot(int count) {
+	// Seed the random number generator
+	srand(time(0));
+	bool isvalid;
+	int row, col;
+	for (int i = 1; i <= count; i++) {
+		do{
+			row = 1 + rand() % (ROW / 2);
+			col = 2 + rand() % (COL - 10);
+			isvalid = true;
+			for (int i = row; i <= row + 1; i++) {
+				for (int j = col; j <= col + 2; j++) {
+					if (map[i][j] != ' ') {
+						isvalid = false;
+						break;
+					}
+				}
+			}
+		}while (!isvalid);
+		placeBot(row + 1, col + 1);
+	}
+}
+//add initial items to the level according to level number
+void addItems(int level) {
+	bool isvalid = false;
+	srand(time(0));
 	//for placing the outside walls 
 	for (int i = 0; i < ROW; i++) {
 		for (int j = 0; j < COL; j++) {
@@ -139,15 +192,46 @@ void addItems() {
 			}
 			else {
 				map[i][j] = ' ';
-			}
+			} 
 		}
 	}
-	//to set up initial position of characters
-	srand(time(0));
-	Crow = (rand() % (ROW / 2 - 2)) + ROW / 2;
-	Ccol = (rand() % (COL - 3) + 1);
-	placeCharacter();
-	placeBot(20, 20);
+	//for placing obstacles and bots according to level.
+	switch (level) {
+	case 1:
+		placeObstacle(3,2);
+		summonBot(2);
+		break;
+	case 2:
+		placeObstacle(3,3);
+		summonBot(3);
+		break;
+	case 3:
+		placeObstacle(4,3);
+		summonBot(4);
+		break;
+	case 4:
+		placeObstacle(4,4);
+		summonBot(5);
+		break;
+	case 5:
+		placeObstacle(5,4);
+		summonBot(6);
+		break;
+	}
+	//validating player spawn location
+	do {
+		Crow = (rand() % (ROW / 2 - 2)) + ROW / 2;
+		Ccol = (rand() % (COL - 3) + 1) + 1;
+		isvalid = true;
+		for (int i = Crow - 1; i <= Crow + 1; i++) {
+			for (int j = Ccol - 1; j <= Ccol + 1; j++) {
+				if (map[i][j] != ' ') {
+					isvalid = false;
+				}
+			}
+		}
+	}while(!isvalid);
+	placeCharacter();//placing the player
 }
 //for summoning lasers in the game.both for player and bots
 void summonLaser(bool isplayer, char direction) {
@@ -193,7 +277,7 @@ bool isvalidMovelocation(int entity,char direction, int row = 0, int col = 0) {
 		}
 		break;
 	case 2:
-		if (map[row][col] != ' ')
+		if (map[row][col] != ' ' || row == 0 || row == ROW - 1 || col == 0 || col == COL - 1)
 			return 0;
 		break;
 	}
@@ -260,77 +344,64 @@ void eventHandler(char action) {
 }
 //function to kill the bot. returns true if a bot has been killed.
 bool killBot(char bulletdirection,int row,int col) {
-	bool isBot = false;
 	int center;
 	switch (bulletdirection) {
 	case UP:
 		for(center = col - 1; center <= col + 1;center++){
 			if (map[row][center] == 'V') {
-				isBot = true;
-				break;
-			}
-		}
-		if (isBot) {
-			for (int i = row - 1; i <= row; i++) {
-				for (int j = center - 1; j <= center + 1; j++) {
-					map[i][j] = ' ';
+				for (int i = row - 1; i <= row; i++) {
+					for (int j = center - 1; j <= center + 1; j++) {
+						map[i][j] = ' ';
+					}
 				}
+				score += 2;
+				return true;
 			}
-			return true;
 		}
 		break;
 	case DOWN:
 		for (center = col - 1; center <= col + 1; center++) {
 			if (map[row + 1][center] == 'V') {
-				isBot = true;
-				break;
-			}
-		}
-		if (isBot) {
-			for (int i = row; i <= row + 1; i++) {
-				for (int j = center - 1; j <= center + 1; j++) {
-					map[i][j] = ' ';
+				for (int i = row; i <= row + 1; i++) {
+					for (int j = center - 1; j <= center + 1; j++) {
+						map[i][j] = ' ';
+					}
 				}
+				score += 2;
+				return true;
 			}
-			return true;
 		}
 		break;
 	case LEFT:
 		for (center = row; center <= row + 1; center++) {
 			if (map[center][col - 1] == 'V') {
-				isBot = true;
-				break;
-			}
-		}
-		if (isBot) {
-			for (int i = center - 1; i <= center; i++) {
-				for (int j = col - 2; j <= col; j++) {
-					map[i][j] = ' ';
+				for (int i = center - 1; i <= center; i++) {
+					for (int j = col - 2; j <= col; j++) {
+						map[i][j] = ' ';
+					}
 				}
+				score += 2;
+				return true;
 			}
-			return true;
 		}
 		break;
 	case RIGHT:
 		for (center = row; center <= row + 1; center++) {
 			if (map[center][col + 1] == 'V') {
-				isBot = true;
-				break;
-			}
-		}
-		if (isBot) {
-			for (int i = center - 1; i <= center; i++) {
-				for (int j = col; j <= col + 2; j++) {
-					map[i][j] = ' ';
+				for (int i = center - 1; i <= center; i++) {
+					for (int j = col; j <= col + 2; j++) {
+						map[i][j] = ' ';
+					}
 				}
+				score += 2;
+				return true;
 			}
-			return true;
 		}
 		break;
 	}
 	return false;
 }
-//moves the bullet per update and perlocation
+//moves the bullet per update
 void moveBullets(int row, int col) {
 	bool iskilled = false;
 	if (map[row][col] == '^') {
@@ -360,15 +431,15 @@ void moveBullets(int row, int col) {
 }
 //updates the game! handling shooting of bullets and moving of robots
 void tickUpdate() {
-	for (int i = 0; i < ROW; i++) {
-		for (int j = 0; j < COL; j++) {
+	for (int i = 1; i < ROW - 1; i++) {
+		for (int j = 1; j < COL - 1; j++) {
 			moveBullets(i, j);
 		}
 	}
 }
 void game() {
 	char Input;
-	addItems();
+	addItems(5);
 	while (true) {
 		system("cls");
 		printMap();
@@ -379,8 +450,6 @@ void game() {
 	}
 }
 int main() {
-	char c;
-	string name = "";
 	name = nameInput();
 	game();
 	return 0;
