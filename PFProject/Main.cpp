@@ -101,7 +101,7 @@ void placeCharacter() {
 	map[Crow][Ccol + 1] = '\\';
 	map[Crow + 1][Ccol + 1] = '\\';
 }
-//placing soloman Lane! the boss of the game
+//places soloman Lane! the boss of the game
 void placeBoss(int row,int col) {
 	map[row - 1][col] = ' ';
 	map[row][col] = 'X';
@@ -117,7 +117,15 @@ void placeBoss(int row,int col) {
 	map[row][col - 2] = ']';
 	map[row][col - 3] = '[';
 }
-
+//places the Robots
+void placeBot(int row, int col) {
+	map[row][col] = 'V';
+	map[row - 1][col] = '|';
+	map[row][col - 1] = '[';
+	map[row - 1][col - 1] = '[';
+	map[row][col + 1] = ']';
+	map[row - 1][col + 1] = ']';
+}
 //add initial items to the level
 void addItems() {
 	//for placing the outside walls 
@@ -139,7 +147,7 @@ void addItems() {
 	Crow = (rand() % (ROW / 2 - 2)) + ROW / 2;
 	Ccol = (rand() % (COL - 3) + 1);
 	placeCharacter();
-	placeBoss(2,4);
+	placeBot(20, 20);
 }
 //for summoning lasers in the game.both for player and bots
 void summonLaser(bool isplayer, char direction) {
@@ -250,30 +258,111 @@ void eventHandler(char action) {
 		}
 	}
 }
-//updates the game handling shooting of bullets and mocing of robots
+//function to kill the bot. returns true if a bot has been killed.
+bool killBot(char bulletdirection,int row,int col) {
+	bool isBot = false;
+	int center;
+	switch (bulletdirection) {
+	case UP:
+		for(center = col - 1; center <= col + 1;center++){
+			if (map[row][center] == 'V') {
+				isBot = true;
+				break;
+			}
+		}
+		if (isBot) {
+			for (int i = row - 1; i <= row; i++) {
+				for (int j = center - 1; j <= center + 1; j++) {
+					map[i][j] = ' ';
+				}
+			}
+			return true;
+		}
+		break;
+	case DOWN:
+		for (center = col - 1; center <= col + 1; center++) {
+			if (map[row + 1][center] == 'V') {
+				isBot = true;
+				break;
+			}
+		}
+		if (isBot) {
+			for (int i = row; i <= row + 1; i++) {
+				for (int j = center - 1; j <= center + 1; j++) {
+					map[i][j] = ' ';
+				}
+			}
+			return true;
+		}
+		break;
+	case LEFT:
+		for (center = row; center <= row + 1; center++) {
+			if (map[center][col - 1] == 'V') {
+				isBot = true;
+				break;
+			}
+		}
+		if (isBot) {
+			for (int i = center - 1; i <= center; i++) {
+				for (int j = col - 2; j <= col; j++) {
+					map[i][j] = ' ';
+				}
+			}
+			return true;
+		}
+		break;
+	case RIGHT:
+		for (center = row; center <= row + 1; center++) {
+			if (map[center][col + 1] == 'V') {
+				isBot = true;
+				break;
+			}
+		}
+		if (isBot) {
+			for (int i = center - 1; i <= center; i++) {
+				for (int j = col; j <= col + 2; j++) {
+					map[i][j] = ' ';
+				}
+			}
+			return true;
+		}
+		break;
+	}
+	return false;
+}
+//moves the bullet per update and perlocation
+void moveBullets(int row, int col) {
+	bool iskilled = false;
+	if (map[row][col] == '^') {
+		map[row][col] = ' ';
+		iskilled = killBot(UP, row - 1, col);
+		if (isvalidMovelocation(2, UP, row - 1, col) && !iskilled)
+			map[row - 1][col] = '^';
+	}
+	else if (map[row][col] == '<') {
+		map[row][col] = ' ';
+		iskilled = killBot(LEFT, row, col - 1);
+		if (isvalidMovelocation(2, LEFT, row, col - 1) && !iskilled)
+			map[row][col - 1] = '<';
+	}
+	else if (map[ROW - 1 - row][COL - 1 - col] == 'v') {
+		map[ROW - 1 - row][COL - 1 - col] = ' ';
+		iskilled = killBot(DOWN, ROW - row, COL - 1 - col);
+		if (isvalidMovelocation(2, DOWN, ROW - row, COL - 1 - col) && !iskilled)
+			map[ROW - row][COL - 1 - col] = 'v';
+	}
+	else if (map[ROW - 1 - row][COL - 1 - col] == '>') {
+		map[ROW - 1 - row][COL - 1 - col] = ' ';
+		iskilled = killBot(RIGHT, ROW - 1 - row, COL - col);
+		if (isvalidMovelocation(2, RIGHT, ROW - 1 - row, COL - col) && !iskilled)
+			map[ROW - 1 - row][COL - col] = '>';
+	}
+}
+//updates the game! handling shooting of bullets and moving of robots
 void tickUpdate() {
 	for (int i = 0; i < ROW; i++) {
 		for (int j = 0; j < COL; j++) {
-			if (map[i][j] == '^') {
-				map[i][j] = ' ';
-				if(isvalidMovelocation(2,UP,i - 1,j))
-					map[i - 1][j] = '^';
-			}
-			if (map[i][j] == '<') {
-				map[i][j] = ' ';
-				if (isvalidMovelocation(2, LEFT, i, j - 1))
-					map[i][j - 1] = '<';
-			}
-			if (map[ROW - 1 - i][COL - 1 - j] == 'v') {
-				map[ROW - 1 - i][COL - 1 - j] = ' ';
-				if (isvalidMovelocation(2, DOWN, ROW - i, COL - 1 - j))
-					map[ROW - i][COL - 1 - j] = 'v';
-			}
-			if (map[ROW - 1 - i][COL - 1 - j] == '>') {
-				map[ROW - 1 - i][COL - 1 - j] = ' ';
-				if (isvalidMovelocation(2, RIGHT, ROW - 1 - i, COL - j))
-					map[ROW - 1 - i][COL - j] = '>';
-			}
+			moveBullets(i, j);
 		}
 	}
 }
