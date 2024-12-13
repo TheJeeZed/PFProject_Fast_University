@@ -19,6 +19,7 @@ const char UP = 72, DOWN = 80, LEFT = 75, RIGHT = 77;
 const int ROW = 25, COL = 25, SCORES = 10;
 //current location of the player
 int Crow, Ccol;
+int Brow, Bcol;
 int score = 0;
 int botcount;
 int lives;
@@ -182,6 +183,9 @@ void summonBot(int count) {
 }
 //add initial items to the level according to level number
 void addItems(int level) {
+	Brow = 5;
+	Bcol = 5;
+	placeBoss(Brow, Bcol);
 	lives = 3;//setup lives at the start of each level
 	//fills the background with spaces to handle any unwanted character 
 	for (int i = 0; i < ROW; i++) {
@@ -240,9 +244,8 @@ void addItems(int level) {
 		isvalid = true;
 		for (int i = Crow - 1; i <= Crow + 1; i++) {
 			for (int j = Ccol - 1; j <= Ccol + 1; j++) {
-				if (map[i][j] != ' ') {
+				if (map[i][j] != ' ')
 					isvalid = false;
-				}
 			}
 		}
 	}while(!isvalid);
@@ -336,9 +339,8 @@ bool killBot(char bulletdirection,int row,int col) {
 		for(center = col - 1; center <= col + 1;center++){
 			if (map[row][center] == 'V') {
 				for (int i = row - 1; i <= row; i++) {
-					for (int j = center - 1; j <= center + 1; j++) {
+					for (int j = center - 1; j <= center + 1; j++)
 						map[i][j] = ' ';
-					}
 				}
 				score += 2;
 				botcount--;
@@ -350,9 +352,8 @@ bool killBot(char bulletdirection,int row,int col) {
 		for (center = col - 1; center <= col + 1; center++) {
 			if (map[row + 1][center] == 'V') {
 				for (int i = row; i <= row + 1; i++) {
-					for (int j = center - 1; j <= center + 1; j++) {
+					for (int j = center - 1; j <= center + 1; j++)
 						map[i][j] = ' ';
-					}
 				}
 				score += 2;
 				botcount--;
@@ -364,9 +365,8 @@ bool killBot(char bulletdirection,int row,int col) {
 		for (center = row; center <= row + 1; center++) {
 			if (map[center][col - 1] == 'V') {
 				for (int i = center - 1; i <= center; i++) {
-					for (int j = col - 2; j <= col; j++) {
+					for (int j = col - 2; j <= col; j++)
 						map[i][j] = ' ';
-					}
 				}
 				score += 2;
 				botcount--;
@@ -378,9 +378,8 @@ bool killBot(char bulletdirection,int row,int col) {
 		for (center = row; center <= row + 1; center++) {
 			if (map[center][col + 1] == 'V') {
 				for (int i = center - 1; i <= center; i++) {
-					for (int j = col; j <= col + 2; j++) {
+					for (int j = col; j <= col + 2; j++)
 						map[i][j] = ' ';
-					}
 				}
 				score += 2;
 				botcount--;
@@ -393,6 +392,7 @@ bool killBot(char bulletdirection,int row,int col) {
 }
 //summons botslaser
 void summonLaser() {
+	srand(time(0));
 	int direction;
 	int rowdiff, coldiff;
 	for (int row = 1; row < ROW - 1; row++) {
@@ -405,21 +405,21 @@ void summonLaser() {
 					coldiff--;
 				}
 				if (coldiff) {
-					if (coldiff < 0 && map[row][col - 2] == ' ') {
+					if (coldiff < 0 && map[row][col - 2] == ' ' /*&& !(rand() % 100)*/) {
 						map[row][col - 2] = '<';
 						mapback[row][col - 2] = 'B';
 					}
-					else if (coldiff > 0 && map[row][col + 2] == ' ') {
+					else if (coldiff > 0 && map[row][col + 2] == ' ' /*&& !(rand() % 100)*/) {
 						map[row][col + 2] = '>';
 						mapback[row][col + 2] = 'B';
 					}
 				}
 				else if (rowdiff) {
-					if (rowdiff < 0 && map[row - 2][col] == ' ') {
+					if (rowdiff < 0 && map[row - 2][col] == ' ' /*&& !(rand() % 100)*/) {
 						map[row - 2][col] = '^';
 						mapback[row - 2][col] = 'B';
 					}
-					else if (rowdiff > 0 && map[row + 1][col] == ' ') {
+					else if (rowdiff > 0 && map[row + 1][col] == ' ' /*&& !(rand() % 100)*/) {
 						map[row + 1][col] = 'v';
 						mapback[row + 1][col] = 'B';
 					}
@@ -428,12 +428,115 @@ void summonLaser() {
 		}
 	}
 }
+//damages player
 bool damagePlayer(int row,int col) {
 	if (map[row][col] == '/' || map[row][col] == '\\' || map[row][col] == 'O' || map[row + 1][col] == 'O') {
-		return 1;
 		lives--;
+		return 1;
 	}
 	return 0;
+}
+void moveBoss() {
+	srand(time(0));
+	bool isvalidmove = false;
+	int direction;
+	while (!isvalidmove) {
+		direction = (rand() % 4);
+		switch (direction) {
+		case 0:
+			isvalidmove = true;
+			for (int i = Bcol - 3; i <= Bcol + 3; i++) {
+				if (killBot(UP, Brow - 2, i))
+					score -= 2;
+			}
+			for (int i = Bcol - 3; i <= Bcol + 3; i++) {
+				if (map[Brow - 2][i] != ' ') {
+					isvalidmove = false;
+					break;
+				}
+			}
+			if (isvalidmove) {
+				for (int i = Bcol - 3; i <= Bcol + 3; i++) {
+					map[Brow + 1][i] = ' ';
+				}
+				map[Brow][Bcol - 3] = ' ';
+				map[Brow][Bcol - 2] = ' ';
+				map[Brow][Bcol + 2] = ' ';
+				map[Brow][Bcol + 3] = ' ';
+				Brow--;
+				placeBoss(Brow, Bcol);
+			}
+			break;
+		case 1:
+			isvalidmove = true;
+			for (int i = Bcol - 3; i <= Bcol + 3; i++) {
+				if (killBot(DOWN,Brow+2,i))
+					score -= 2;
+			}
+			for (int i = Bcol - 3; i <= Bcol + 3; i++) {
+				if (map[Brow + 2][i] != ' ') {
+					isvalidmove = false;
+					break;
+				}
+			}
+			if (isvalidmove) {
+				for (int i = Bcol - 3; i <= Bcol + 3; i++) {
+					map[Brow - 1][i] = ' ';
+				}
+				map[Brow][Bcol - 3] = ' ';
+				map[Brow][Bcol - 2] = ' ';
+				map[Brow][Bcol + 2] = ' ';
+				map[Brow][Bcol + 3] = ' ';
+				Brow++;
+				placeBoss(Brow, Bcol);
+			}
+			break;
+		case 2:
+			isvalidmove = true;
+			for (int i = Brow - 1; i <= Brow + 1; i++) {
+				if (killBot(LEFT, i, Bcol - 4))
+					score -= 2;
+			}
+			for (int i = Brow - 1; i <= Brow + 1; i++) {
+				if (map[i][Bcol - 4] != ' ') {
+					isvalidmove = false;
+					break;
+				}
+			}
+			if (isvalidmove) {
+				for (int i = Brow - 1; i <= Brow + 1; i++) {
+					map[i][Bcol + 3] = ' ';
+				}
+				map[Brow - 1][Bcol + 1] = ' ';
+				map[Bcol + 1][Bcol + 1] = ' ';
+				Bcol--;
+				placeBoss(Brow, Bcol);
+			}
+			break;
+		case 3:
+			for (int i = Brow - 1; i <= Brow + 1; i++) {
+				if (killBot(RIGHT, i, Bcol + 4))
+					score -= 2;
+			}
+			isvalidmove = true;
+			for (int i = Brow - 1; i <= Brow + 1; i++) {
+				if (map[i][Bcol + 4] != ' ') {
+					isvalidmove = false;
+					break;
+				}
+			}
+			if (isvalidmove) {
+				for (int i = Brow - 1; i <= Brow + 1; i++) {
+					map[i][Bcol - 3] = ' ';
+				}
+				map[Brow - 1][Bcol - 1] = ' ';
+				map[Brow + 1][Bcol - 1] = ' ';
+				Bcol++;
+				placeBoss(Brow, Bcol);
+				break;
+			}
+		}
+	}
 }
 //moves the bullet per update
 void moveBullets() {
@@ -522,8 +625,9 @@ void moveBullets() {
 }
 //updates the game! handling shooting of bullets and moving of robots
 void tickUpdate() {
+	moveBoss();
 	moveBullets();
-	summonLaser();
+	//summonLaser();
 }
 void game() {
 	char Input;
