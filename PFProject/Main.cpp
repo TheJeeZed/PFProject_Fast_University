@@ -20,6 +20,7 @@ const int ROW = 25, COL = 25, SCORES = 10;
 //current location of the player
 int Crow, Ccol;
 int Brow, Bcol;
+int Botrow[6], Botcol[6];
 int score = 0;
 int botcount;
 int lives;
@@ -137,7 +138,7 @@ void placeObstacle(int width,int count)
 	// Seed the random number generator
 	bool isvalid;
 	int row, col;
-	for (int i = 1; i <= count; i++) {
+	for (int k = 1; k <= count; k++) {
 		do { // validating check. rerolling until a valid location is found
 			row = 1 + rand() % (ROW - 2);
 			col = 1 + rand() % (COL - 10);
@@ -161,14 +162,13 @@ void placeObstacle(int width,int count)
 void summonBot(int count) {
 	// Seed the random number generator
 	bool isvalid;
-	int row, col;
-	for (int i = 1; i <= count; i++) {
+	for (int k = 0; k < count; k++) {
 		do{
-			row = 1 + (rand() % (ROW / 2));
-			col = 2 + (rand() % (COL - 1));
+			Botrow[k] = 1 + (rand() % (ROW / 2));
+			Botcol[k] = 2 + (rand() % (COL - 1));
 			isvalid = true;
-			for (int i = row; i <= row + 1; i++) {
-				for (int j = col; j <= col + 2; j++) {
+			for (int i = Botrow[k] - 1; i <= Botrow[k]; i++) {
+				for (int j = Botcol[k] - 1; j <= Botcol[k] + 1; j++) {
 					if (map[i][j] != ' ') {
 						isvalid = false;
 						break;
@@ -176,7 +176,7 @@ void summonBot(int count) {
 				}
 			}
 		}while (!isvalid);
-		placeBot(row + 1, col + 1);
+		placeBot(Botrow[k], Botcol[k]);
 	}
 }
 //add initial items to the level according to level number
@@ -331,56 +331,71 @@ void eventHandler(char &action) {
 }
 //function to kill the bot. returns true if a bot has been killed.
 bool killBot(char bulletdirection,int row,int col) {
-	int center;
 	switch (bulletdirection) {
 	case UP:
-		for(center = col - 1; center <= col + 1;center++){
-			if (map[row][center] == 'V') {
-				for (int i = row - 1; i <= row; i++) {
-					for (int j = center - 1; j <= center + 1; j++)
+		for (int k = 0; k < botcount; k++) {
+			if (map[Botrow[k]][Botcol[k]] == 'V' && row == Botrow[k] && (Botcol[k] >= col - 1 && Botcol[k] <= col + 1)) {
+				for (int i = Botrow[k] - 1; i <= Botrow[k]; i++) {
+					for (int j = Botcol[k] - 1; j <= Botcol[k] + 1; j++)
 						map[i][j] = ' ';
 				}
 				score += 2;
 				botcount--;
+				for (int i = k; i < botcount; i++) {
+					Botrow[i] = Botrow[i + 1];
+					Botcol[i] = Botcol[i + 1];
+				}
 				return true;
 			}
 		}
 		break;
 	case DOWN:
-		for (center = col - 1; center <= col + 1; center++) {
-			if (map[row + 1][center] == 'V') {
-				for (int i = row; i <= row + 1; i++) {
-					for (int j = center - 1; j <= center + 1; j++)
+		for (int k = 0; k < 6; k++) {
+			if (map[Botrow[k]][Botcol[k]] == 'V' && row + 1 == Botrow[k] && (Botcol[k] >= col - 1 && Botcol[k] <= col + 1)) {
+				for (int i = Botrow[k] - 1; i <= Botrow[k]; i++) {
+					for (int j = Botcol[k] - 1; j <= Botcol[k] + 1; j++)
 						map[i][j] = ' ';
 				}
 				score += 2;
 				botcount--;
+				for (int i = k; i < botcount; i++) {
+					Botrow[i] = Botrow[i + 1];
+					Botcol[i] = Botcol[i + 1];
+				}
 				return true;
 			}
 		}
 		break;
 	case LEFT:
-		for (center = row; center <= row + 1; center++) {
-			if (map[center][col - 1] == 'V') {
-				for (int i = center - 1; i <= center; i++) {
-					for (int j = col - 2; j <= col; j++)
+		for (int k = 0; k < 6; k++) {
+			if (map[Botrow[k]][Botcol[k]] == 'V' && col - 1 == Botcol[k] && (Botrow[k] >= row && Botrow[k] <= row + 1)) {
+				for (int i = Botrow[k] - 1; i <= Botrow[k]; i++) {
+					for (int j = Botcol[k] - 1; j <= Botcol[k] + 1; j++)
 						map[i][j] = ' ';
 				}
 				score += 2;
 				botcount--;
+				for (int i = k; i < botcount; i++) {
+					Botrow[i] = Botrow[i + 1];
+					Botcol[i] = Botcol[i + 1];
+				}
 				return true;
 			}
 		}
 		break;
 	case RIGHT:
-		for (center = row; center <= row + 1; center++) {
-			if (map[center][col + 1] == 'V') {
-				for (int i = center - 1; i <= center; i++) {
-					for (int j = col; j <= col + 2; j++)
+		for (int k = 0; k < 6; k++) {
+			if (map[Botrow[k]][Botcol[k]] == 'V' && col + 1 == Botcol[k] && (Botrow[k] >= row && Botrow[k] <= row + 1)) {
+				for (int i = Botrow[k] - 1; i <= Botrow[k]; i++) {
+					for (int j = Botcol[k] - 1; j <= Botcol[k] + 1; j++)
 						map[i][j] = ' ';
 				}
 				score += 2;
 				botcount--;
+				for (int i = k; i < botcount; i++) {
+					Botrow[i] = Botrow[i + 1];
+					Botcol[i] = Botcol[i + 1];
+				}
 				return true;
 			}
 		}
@@ -390,37 +405,26 @@ bool killBot(char bulletdirection,int row,int col) {
 }
 //summons botslaser 
 void summonLaser() {
-	int direction;
 	int rowdiff, coldiff;
-	for (int row = 1; row < ROW - 1; row++) {
-		for (int col = 1; col < COL - 1; col++) {
-			if (map[row][col] == 'V') {
-				rowdiff = Crow - row;
-				coldiff = Ccol - col;
-				while (rowdiff && coldiff) {
-					(rowdiff > 0) ? rowdiff--:rowdiff++;
-					(coldiff > 0) ? coldiff--:coldiff++;
-				}
-				if (coldiff && !(rand() % 10)) {
-					if (coldiff < 0 && map[row][col - 2] == ' ') {
-						map[row][col - 2] = '<';
-						mapback[row][col - 2] = 'B';
-					}
-					else if (coldiff > 0 && map[row][col + 2] == ' ') {
-						map[row][col + 2] = '>';
-						mapback[row][col + 2] = 'B';
-					}
-				}
-				else if (rowdiff && !(rand() % 10)) {
-					if (rowdiff < 0 && map[row - 2][col] == ' ') {
-						map[row - 2][col] = '^';
-						mapback[row - 2][col] = 'B';
-					}
-					else if (rowdiff > 0 && map[row + 1][col] == ' ') {
-						map[row + 1][col] = 'v';
-						mapback[row + 1][col] = 'B';
-					}
-				}
+	for (int i = 0; i < botcount; i++) {
+		if (map[Botrow[i]][Botcol[i]] == 'V') {
+			rowdiff = Crow - Botrow[i];
+			coldiff = Ccol - Botcol[i];
+			while (rowdiff && coldiff) {
+				(rowdiff > 0) ? rowdiff-- : rowdiff++;
+				(coldiff > 0) ? coldiff-- : coldiff++;
+			}
+			if (coldiff  && !(rand() % 10)) {
+				if (coldiff < 0 && map[Botrow[i]][Botcol[i] - 2] == ' ')
+					map[Botrow[i]][Botcol[i] - 2] = '<';
+				else if (coldiff > 0 && map[Botrow[i]][Botcol[i] + 2] == ' ')
+					map[Botrow[i]][Botcol[i] + 2] = '>';
+			}
+			else if (rowdiff  && !(rand() % 10)) {
+				if (rowdiff < 0 && map[Botrow[i] - 2][Botcol[i]] == ' ')
+					map[Botrow[i] - 2][Botcol[i]] = '^';
+				else if (rowdiff > 0 && map[Botrow[i] + 2][Botcol[i]] == ' ')
+					map[Botrow[i] + 2][Botcol[i]] = 'v';
 			}
 		}
 	}
@@ -539,6 +543,9 @@ void moveBoss() {
 		}
 	}
 }
+void moveBots() {
+
+}
 //opens the door
 bool openDoor() {
 	int direction;
@@ -566,73 +573,41 @@ void moveBullets() {
 		for (int col = 1; col < COL - 1; col++) {
 			if (map[row][col] == '^') {
 				map[row][col] = ' ';
-				if (mapback[row][col] == 'F') {
-					iskilled = killBot(UP, row - 1, col);
-					if ((map[row - 1][col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
-						map[row - 1][col] = '^';
+				iskilled = (mapback[row][col] == 'F') ? killBot(UP, row - 1, col) : damagePlayer(row - 1, col);
+				if ((map[row - 1][col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
+					map[row - 1][col] = '^';
+					if (mapback[row][col] == 'F')
 						mapback[row - 1][col] = 'F';
-					}
-				}
-				else {
-					iskilled = damagePlayer(row - 1, col);
-					if ((map[row - 1][col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
-						map[row - 1][col] = '^';
-						mapback[row - 1][col] = 'B';
-					}
 				}
 				mapback[row][col] = ' ';
 			}
 			else if (map[row][col] == '<') {
 				map[row][col] = ' ';
-				if (mapback[row][col] == 'F') {
-					iskilled = killBot(LEFT, row, col - 1);
-					if ((map[row][col - 1] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
-						map[row][col - 1] = '<';
+				iskilled = (mapback[row][col] == 'F') ? killBot(LEFT, row, col - 1) : damagePlayer(row, col - 1);
+				if ((map[row][col - 1] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
+					map[row][col - 1] = '<';
+					if (mapback[row][col] == 'F')
 						mapback[row][col - 1] = 'F';
-					}
-				}
-				else {
-					iskilled = damagePlayer(row, col - 1);
-					if ((map[row][col - 1] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
-						map[row][col - 1] = '<';
-						mapback[row][col - 1] = 'B';
-					}
 				}
 				mapback[row][col] = ' ';
 			}
 			else if (map[ROW - 1 - row][COL - 1 - col] == 'v') {
 				map[ROW - 1 - row][COL - 1 - col] = ' ';
-				if (mapback[ROW - 1 - row][COL - 1 - col] == 'F') {
-					iskilled = killBot(DOWN, ROW - row, COL - 1 - col);
-					if ((map[ROW - row][COL - 1 - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
-						map[ROW - row][COL - 1 - col] = 'v';
+				iskilled = (mapback[ROW - 1 - row][COL - 1 - col] == 'F') ? killBot(DOWN, ROW - row, COL - 1 - col) : damagePlayer(ROW - row, COL - 1 - col);
+				if ((map[ROW - row][COL - 1 - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled){
+					map[ROW - row][COL - 1 - col] = 'v';
+					if (mapback[ROW - 1 - row][COL - 1 - col] == 'F')
 						mapback[ROW - row][COL - 1 - col] = 'F';
-					}
-				}
-				else {
-					iskilled = damagePlayer(ROW - row, COL - 1 - col);
-					if ((map[ROW - row][COL - 1 - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
-						map[ROW - row][COL - 1 - col] = 'v';
-						mapback[ROW - row][COL - 1 - col] = 'B';
-					}
 				}
 				mapback[ROW - 1 - row][COL - 1 - col] = ' ';
 			}
 			else if (map[ROW - 1 - row][COL - 1 - col] == '>') {
 				map[ROW - 1 - row][COL - 1 - col] = ' ';
-				if (mapback[ROW - 1 - row][COL - 1 - col] == 'F') {
-					iskilled = killBot(RIGHT, ROW - 1 - row, COL - col);
-					if ((map[ROW - 1 - row][COL - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
-						map[ROW - 1 - row][COL - col] = '>';
+				iskilled = (mapback[ROW - 1 - row][COL - 1 - col] == 'F') ? killBot(RIGHT, ROW - 1 - row, COL - col) : damagePlayer(ROW - 1 - row, COL - col);
+				if ((map[ROW - 1 - row][COL - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled){
+					map[ROW - 1 - row][COL - col] = '>';
+					if(mapback[ROW - 1 - row][COL - 1 - col] == 'F')
 						mapback[ROW - 1 - row][COL - col] = 'F';
-					}
-				}
-				else {
-					iskilled = damagePlayer(ROW - 1 - row, COL - col);
-					if ((map[ROW - 1 - row][COL - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
-						map[ROW - 1 - row][COL - col] = '>';
-						mapback[ROW - 1 - row][COL - col] = 'B';
-					}
 				}
 				mapback[ROW - 1 - row][COL - 1 - col] = ' ';
 			}
@@ -667,9 +642,9 @@ void game() {
 				Input = _getch();
 			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), { 0,0 });//used to put the curser at the start of map. better then cls to avoid jittering
 			eventHandler(Input);
-			moveBoss();
+			//moveBoss();
 			moveBullets();
-			summonLaser();
+			//summonLaser();
 			if (!isopen) {
 				isopen = openDoor();
 			}
