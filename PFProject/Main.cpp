@@ -135,7 +135,6 @@ void placeBot(int row, int col) {
 void placeObstacle(int width,int count)
 {
 	// Seed the random number generator
-	srand(time(0));
 	bool isvalid;
 	int row, col;
 	for (int i = 1; i <= count; i++) {
@@ -161,7 +160,6 @@ void placeObstacle(int width,int count)
 //summon bots takes in the number of bots to be summoned as parameter
 void summonBot(int count) {
 	// Seed the random number generator
-	srand(time(0));
 	bool isvalid;
 	int row, col;
 	for (int i = 1; i <= count; i++) {
@@ -183,9 +181,6 @@ void summonBot(int count) {
 }
 //add initial items to the level according to level number
 void addItems(int level) {
-	Brow = 5;
-	Bcol = 5;
-	placeBoss(Brow, Bcol);
 	lives = 3;//setup lives at the start of each level
 	//fills the background with spaces to handle any unwanted character 
 	for (int i = 0; i < ROW; i++) {
@@ -194,7 +189,6 @@ void addItems(int level) {
 		}
 	}
 	bool isvalid = false;
-	srand(time(0));
 	//for placing the outside walls 
 	for (int i = 0; i < ROW; i++) {
 		for (int j = 0; j < COL; j++) {
@@ -209,6 +203,9 @@ void addItems(int level) {
 			} 
 		}
 	}
+	Brow = 5;
+	Bcol = 5;
+	placeBoss(Brow, Bcol);
 	//for placing obstacles and bots according to level.
 	switch (level) {
 	case 1:
@@ -252,7 +249,7 @@ void addItems(int level) {
 	placeCharacter();//placing the player
 }
 //handles all the inputs entered by the user while playing the game
-void eventHandler(char action) {
+void eventHandler(char &action) {
 	//check if the map has player bullet
 	bool hasPlayerBullet = false;
 	for (int i = 0; i < ROW; i++) {
@@ -330,6 +327,7 @@ void eventHandler(char action) {
 			break;
 		}
 	}
+	action = '0';
 }
 //function to kill the bot. returns true if a bot has been killed.
 bool killBot(char bulletdirection,int row,int col) {
@@ -390,9 +388,8 @@ bool killBot(char bulletdirection,int row,int col) {
 	}
 	return false;
 }
-//summons botslaser
+//summons botslaser 
 void summonLaser() {
-	srand(time(0));
 	int direction;
 	int rowdiff, coldiff;
 	for (int row = 1; row < ROW - 1; row++) {
@@ -401,25 +398,25 @@ void summonLaser() {
 				rowdiff = Crow - row;
 				coldiff = Ccol - col;
 				while (rowdiff && coldiff) {
-					rowdiff--;
-					coldiff--;
+					(rowdiff > 0) ? rowdiff--:rowdiff++;
+					(coldiff > 0) ? coldiff--:coldiff++;
 				}
-				if (coldiff) {
-					if (coldiff < 0 && map[row][col - 2] == ' ' /*&& !(rand() % 100)*/) {
+				if (coldiff && !(rand() % 10)) {
+					if (coldiff < 0 && map[row][col - 2] == ' ') {
 						map[row][col - 2] = '<';
 						mapback[row][col - 2] = 'B';
 					}
-					else if (coldiff > 0 && map[row][col + 2] == ' ' /*&& !(rand() % 100)*/) {
+					else if (coldiff > 0 && map[row][col + 2] == ' ') {
 						map[row][col + 2] = '>';
 						mapback[row][col + 2] = 'B';
 					}
 				}
-				else if (rowdiff) {
-					if (rowdiff < 0 && map[row - 2][col] == ' ' /*&& !(rand() % 100)*/) {
+				else if (rowdiff && !(rand() % 10)) {
+					if (rowdiff < 0 && map[row - 2][col] == ' ') {
 						map[row - 2][col] = '^';
 						mapback[row - 2][col] = 'B';
 					}
-					else if (rowdiff > 0 && map[row + 1][col] == ' ' /*&& !(rand() % 100)*/) {
+					else if (rowdiff > 0 && map[row + 1][col] == ' ') {
 						map[row + 1][col] = 'v';
 						mapback[row + 1][col] = 'B';
 					}
@@ -432,12 +429,12 @@ void summonLaser() {
 bool damagePlayer(int row,int col) {
 	if (map[row][col] == '/' || map[row][col] == '\\' || map[row][col] == 'O' || map[row + 1][col] == 'O') {
 		lives--;
-		return 1;
+		return true;
 	}
-	return 0;
+	return false;
 }
+//moves the boss
 void moveBoss() {
-	srand(time(0));
 	bool isvalidmove = false;
 	int direction;
 	while (!isvalidmove) {
@@ -449,6 +446,7 @@ void moveBoss() {
 				if (killBot(UP, Brow - 2, i))
 					score -= 2;
 			}
+			damagePlayer(Brow - 2, Bcol);
 			for (int i = Bcol - 3; i <= Bcol + 3; i++) {
 				if (map[Brow - 2][i] != ' ') {
 					isvalidmove = false;
@@ -473,6 +471,7 @@ void moveBoss() {
 				if (killBot(DOWN,Brow+2,i))
 					score -= 2;
 			}
+			damagePlayer(Brow + 2, Bcol);
 			for (int i = Bcol - 3; i <= Bcol + 3; i++) {
 				if (map[Brow + 2][i] != ' ') {
 					isvalidmove = false;
@@ -497,6 +496,7 @@ void moveBoss() {
 				if (killBot(LEFT, i, Bcol - 4))
 					score -= 2;
 			}
+			damagePlayer(Brow, Bcol - 4);
 			for (int i = Brow - 1; i <= Brow + 1; i++) {
 				if (map[i][Bcol - 4] != ' ') {
 					isvalidmove = false;
@@ -508,7 +508,7 @@ void moveBoss() {
 					map[i][Bcol + 3] = ' ';
 				}
 				map[Brow - 1][Bcol + 1] = ' ';
-				map[Bcol + 1][Bcol + 1] = ' ';
+				map[Brow + 1][Bcol + 1] = ' ';
 				Bcol--;
 				placeBoss(Brow, Bcol);
 			}
@@ -516,8 +516,9 @@ void moveBoss() {
 		case 3:
 			for (int i = Brow - 1; i <= Brow + 1; i++) {
 				if (killBot(RIGHT, i, Bcol + 4))
-					score -= 2;
+					score -= 2;	
 			}
+			damagePlayer(Brow, Bcol + 4);
 			isvalidmove = true;
 			for (int i = Brow - 1; i <= Brow + 1; i++) {
 				if (map[i][Bcol + 4] != ' ') {
@@ -538,16 +539,34 @@ void moveBoss() {
 		}
 	}
 }
+//opens the door
+bool openDoor() {
+	int direction;
+	if (!botcount) {
+		direction = rand() % 2;
+		switch (direction) {
+		case 0:
+			for (int i = COL / 2 - 2; i <= COL / 2 + 2; i++) {
+				map[0][i] = ' ';
+			}
+			return true;
+		case 1:
+			for (int i = ROW / 2 - 2; i <= ROW / 2 + 2; i++) {
+				map[i][COL - 1] = ' ';
+			}
+			return true;
+		}
+	}
+	return false;
+}
 //moves the bullet per update
 void moveBullets() {
 	bool iskilled = false;
-	bool isdamaged = false;
 	for (int row = 1; row < ROW - 1; row++) {
 		for (int col = 1; col < COL - 1; col++) {
 			if (map[row][col] == '^') {
 				map[row][col] = ' ';
 				if (mapback[row][col] == 'F') {
-					mapback[row][col] = ' ';
 					iskilled = killBot(UP, row - 1, col);
 					if ((map[row - 1][col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
 						map[row - 1][col] = '^';
@@ -555,18 +574,17 @@ void moveBullets() {
 					}
 				}
 				else {
-					mapback[row][col] = ' ';
 					iskilled = damagePlayer(row - 1, col);
 					if ((map[row - 1][col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
 						map[row - 1][col] = '^';
 						mapback[row - 1][col] = 'B';
 					}
 				}
+				mapback[row][col] = ' ';
 			}
 			else if (map[row][col] == '<') {
 				map[row][col] = ' ';
-				if (map[row][col] == 'F') {
-					mapback[row][col] = ' ';
+				if (mapback[row][col] == 'F') {
 					iskilled = killBot(LEFT, row, col - 1);
 					if ((map[row][col - 1] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
 						map[row][col - 1] = '<';
@@ -574,18 +592,17 @@ void moveBullets() {
 					}
 				}
 				else {
-					mapback[row][col] = ' ';
 					iskilled = damagePlayer(row, col - 1);
 					if ((map[row][col - 1] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
 						map[row][col - 1] = '<';
 						mapback[row][col - 1] = 'B';
 					}
 				}
+				mapback[row][col] = ' ';
 			}
 			else if (map[ROW - 1 - row][COL - 1 - col] == 'v') {
 				map[ROW - 1 - row][COL - 1 - col] = ' ';
-				if (map[ROW - 1 - row][COL - 1 - col] == 'F') {
-					mapback[ROW - 1 - row][COL - 1 - col] = ' ';
+				if (mapback[ROW - 1 - row][COL - 1 - col] == 'F') {
 					iskilled = killBot(DOWN, ROW - row, COL - 1 - col);
 					if ((map[ROW - row][COL - 1 - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
 						map[ROW - row][COL - 1 - col] = 'v';
@@ -593,18 +610,17 @@ void moveBullets() {
 					}
 				}
 				else {
-					mapback[ROW - 1 - row][COL - 1 - col] = ' ';
 					iskilled = damagePlayer(ROW - row, COL - 1 - col);
 					if ((map[ROW - row][COL - 1 - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
 						map[ROW - row][COL - 1 - col] = 'v';
 						mapback[ROW - row][COL - 1 - col] = 'B';
 					}
 				}
+				mapback[ROW - 1 - row][COL - 1 - col] = ' ';
 			}
 			else if (map[ROW - 1 - row][COL - 1 - col] == '>') {
 				map[ROW - 1 - row][COL - 1 - col] = ' ';
-				if (map[ROW - 1 - row][COL - 1 - col] == 'F') {
-					mapback[ROW - 1 - row][COL - 1 - col] = ' ';
+				if (mapback[ROW - 1 - row][COL - 1 - col] == 'F') {
 					iskilled = killBot(RIGHT, ROW - 1 - row, COL - col);
 					if ((map[ROW - 1 - row][COL - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
 						map[ROW - 1 - row][COL - col] = '>';
@@ -612,37 +628,63 @@ void moveBullets() {
 					}
 				}
 				else {
-					mapback[ROW - 1 - row][COL - 1 - col] = ' ';
 					iskilled = damagePlayer(ROW - 1 - row, COL - col);
 					if ((map[ROW - 1 - row][COL - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
 						map[ROW - 1 - row][COL - col] = '>';
 						mapback[ROW - 1 - row][COL - col] = 'B';
 					}
 				}
+				mapback[ROW - 1 - row][COL - 1 - col] = ' ';
 			}
 		}
 	}
 }
-//updates the game! handling shooting of bullets and moving of robots
-void tickUpdate() {
-	moveBoss();
-	moveBullets();
-	//summonLaser();
+//level win check
+bool isWin(bool isopen) {
+	if (isopen) {
+		for (int i = COL / 2 - 2; i <= COL / 2 + 2; i++) {
+			if (map[0][i] == 'O')
+				return true;
+		}
+		for (int i = ROW / 2 - 2; i <= ROW / 2 + 2; i++) {
+			if (map[i][COL - 1] == '\\')
+				return true;
+		}
+	}
+	return false;
 }
 void game() {
+	system("cls");
 	char Input;
-	addItems(5);
-	while (lives) {
-		system("cls");
-		cout << lives << endl;
-		printMap();
-		Input = _getch();
-		system("cls");
-		eventHandler(Input);
-		tickUpdate();
+	bool isopen;
+	for (int i = 1; i <= 5; i++) {
+		isopen = false;
+		addItems(i);
+		while (lives && !isWin(isopen)) {
+			cout << lives << endl;
+			printMap();
+			if (_kbhit())
+				Input = _getch();
+			SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), { 0,0 });//used to put the curser at the start of map. better then cls to avoid jittering
+			eventHandler(Input);
+			moveBoss();
+			moveBullets();
+			summonLaser();
+			if (!isopen) {
+				isopen = openDoor();
+			}
+			Sleep(50);
+		}
+		if (!lives) {
+			system("cls");
+			cout << "YOU LOST MAYBE TRY AGAIN" << endl;
+			system("pause");
+			break;
+		}
 	}
 }
 int main() {
+	srand(time(0));
 	name = nameInput();
 	game();
 	return 0;
