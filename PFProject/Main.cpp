@@ -839,6 +839,7 @@ void game() {
 	putScores();
 }
 int main() {
+	system("Color 06");
 	srand(time(0));
 	getScores();
 	name = nameInput();
