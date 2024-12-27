@@ -194,6 +194,7 @@ void summonBot(int count) {
 //add initial items to the level according to level number
 void addItems(int level) {
 	lives = 3;//setup lives at the start of each level
+	Bulletcol = -1;
 	//fills the background with spaces to handle any unwanted character 
 	for (int i = 0; i < ROW; i++) {
 		for (int j = 0; j < COL; j++) {
@@ -786,7 +787,7 @@ bool isWin(bool isopen) {
 	}
 	return false;
 }
-//runs the entire game;
+//runs the entire game
 void game() {
 	system("cls");
 	score = 0;
@@ -828,12 +829,14 @@ void game() {
 			hasclearedlevels= false;
 			system("cls");
 			cout << "YOU LOST MAYBE TRY AGAIN" << endl;
+			system("pause");
 			break;
 		}
 	}
 	if (hasclearedlevels) {
 		system("cls");
 		cout << "YOU WON!" << endl;
+		system("pause");
 	}
 	updateScores();
 	putScores();
@@ -855,9 +858,7 @@ int main() {
 		}
 		switch (choice) {
 		case 1:
-			system("cls");
 			game();
-			system("cls");
 			break;
 		case 2:
 			system("cls");
