@@ -380,7 +380,7 @@ bool killBot(char bulletdirection, int row, int col) {
 	switch (bulletdirection) {
 	case UP:
 		for (int k = 0; k < botcount; k++) {
-			if (map[Botrow[k]][Botcol[k]] == 'V' && row == Botrow[k] && (Botcol[k] >= col - 1 && Botcol[k] <= col + 1)) {
+			if (map[Botrow[k]][Botcol[k]] =='V' && row == Botrow[k] && (Botcol[k] >= col - 1 && Botcol[k] <= col + 1)) {
 				for (int i = Botrow[k] - 1; i <= Botrow[k]; i++) {
 					for (int j = Botcol[k] - 1; j <= Botcol[k] + 1; j++)
 						map[i][j] = ' ';
@@ -722,7 +722,7 @@ bool openDoor() {
 	return false;
 }
 //moves the bullet per update
-void moveBullets() {
+void moveBullets()	 {
 	bool iskilled = false;
 	for (int row = 1; row < ROW - 1; row++) {
 		for (int col = 1; col < COL - 1; col++) {
@@ -791,6 +791,7 @@ bool isWin(bool isopen) {
 void game() {
 	system("cls");
 	score = 0;
+	shots = 0;
 	char Input;
 	bool isopen,hasclearedlevels = true;
 	int botmovetick = 0, scoretick = 0, bossmovetick = 0;
@@ -864,6 +865,8 @@ int main() {
 			system("cls");
 			printScores();
 			break;
+		case 3:break;
+		case 4:cout << "INVALID CHOICE" << endl;
 		}
 	} while (choice != 3);
 	return 0;
