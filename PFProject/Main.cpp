@@ -16,14 +16,14 @@ using namespace std;
 
 //directional constant for the arrow keys
 const char UP = 72, DOWN = 80, LEFT = 75, RIGHT = 77;
-//the size of map and number of highscores to store
-const int ROW = 25, COL = 25, SCORES = 10;
+//the size of map and stuff like bots and highscores
+const int ROW = 25, COL = 25, SCORES = 10, BOTS = 6;
 //current location of the player
 int Crow, Ccol;
 int Brow, Bcol;
-int Botrow[6], Botcol[6];
-int Laserrow[] = { -1,-1,-1,-1,-1,-1 }, Lasercol[] = {-1,-1,-1,-1,-1,-1};
-int Bulletrow[2] = { -1, -1 }, Bulletcol[2] = { -1, -1 };
+int Botrow[BOTS], Botcol[BOTS];
+int Laserrow[BOTS], Lasercol[BOTS];
+int Bulletrow[2], Bulletcol[2];
 int score,botcount,lives;
 int shots = 0;
 bool isspecialbullet = false;
@@ -380,9 +380,9 @@ bool killBot(char bulletdirection, int row, int col) {
 		}
 	}
 	if (iskilled) {
-		for (int i = Botrow[botnumber] - 1; i <= Botrow[botnumber]; i++) {
-			for (int j = Botcol[botnumber] - 1; j <= Botcol[botnumber] + 1; j++)
-				map[i][j] = ' ';
+		for (int i = Botcol[botnumber] - 1; i <= Botcol[botnumber] + 1; i++) {
+			map[Botrow[botnumber]][i] = ' ';
+			map[Botrow[botnumber] - 1][i] = ' ';
 		}
 		score += 2;
 		botcount--;
@@ -391,7 +391,7 @@ bool killBot(char bulletdirection, int row, int col) {
 			Botrow[i] = Botrow[i + 1];
 			Botcol[i] = Botcol[i + 1];
 			Laserrow[i] = Laserrow[i + 1];
-			Lasercol[i] = Laserrow[i + 1];
+			Lasercol[i] = Lasercol[i + 1];
 		}
 	}
 	return iskilled;
