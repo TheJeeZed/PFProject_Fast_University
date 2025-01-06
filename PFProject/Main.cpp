@@ -22,10 +22,9 @@ const int ROW = 25, COL = 25, SCORES = 10;
 int Crow, Ccol;
 int Brow, Bcol;
 int Botrow[6], Botcol[6];
+int Laserrow[] = { -1,-1,-1,-1,-1,-1 }, Lasercol[] = {-1,-1,-1,-1,-1,-1};
 int Bulletrow[2] = { -1, -1 }, Bulletcol[2] = { -1, -1 };
-int score;
-int botcount;
-int lives;
+int score,botcount,lives;
 int shots = 0;
 bool isspecialbullet = false;
 string name = "";
@@ -147,7 +146,6 @@ void placeBot(int row, int col) {
 //validates and places an obstacle on the map
 void placeObstacle(int width,int count)
 {
-	// Seed the random number generator
 	bool isvalid;
 	int row, col;
 	for (int k = 1; k <= count; k++) {
@@ -235,6 +233,9 @@ void addItems(int level) {
 		summonBot(6);
 		botcount = 6;
 		break;
+	}
+	for (int i = 0; i < botcount; i++) {
+		Laserrow[i] = -1;
 	}
 	//validating player spawn location
 	do {
@@ -367,77 +368,33 @@ void eventHandler(char &action) {
 }
 //function to kill the bot. returns true if a bot has been killed.
 bool killBot(char bulletdirection, int row, int col) {
-	switch (bulletdirection) {
-	case UP:
-		for (int k = 0; k < botcount; k++) {
-			if (map[Botrow[k]][Botcol[k]] =='V' && row == Botrow[k] && (Botcol[k] >= col - 1 && Botcol[k] <= col + 1)) {
-				for (int i = Botrow[k] - 1; i <= Botrow[k]; i++) {
-					for (int j = Botcol[k] - 1; j <= Botcol[k] + 1; j++)
-						map[i][j] = ' ';
-				}
-				score += 2;
-				botcount--;
-				for (int i = k; i < botcount; i++) {
-					Botrow[i] = Botrow[i + 1];
-					Botcol[i] = Botcol[i + 1];
-				}
-				return true;
-			}
+	bool iskilled = false;
+	int botnumber;
+	for (botnumber = 0; botnumber < botcount; botnumber++) {
+		if ((bulletdirection == UP && row == Botrow[botnumber] && (Botcol[botnumber] >= col - 1 && Botcol[botnumber] <= col + 1)) ||
+			(bulletdirection == DOWN && row + 1== Botrow[botnumber] && (Botcol[botnumber] >= col - 1 && Botcol[botnumber] <= col + 1)) ||
+			(bulletdirection == LEFT && col - 1 == Botcol[botnumber] && (Botrow[botnumber] >= row && Botrow[botnumber] <= row + 1)) ||
+			(bulletdirection == RIGHT && col + 1 == Botcol[botnumber] && (Botrow[botnumber] >= row && Botrow[botnumber] <= row + 1))) {
+			iskilled = true;
+			break;
 		}
-		break;
-	case DOWN:
-		for (int k = 0; k < 6; k++) {
-			if (map[Botrow[k]][Botcol[k]] == 'V' && row + 1 == Botrow[k] && (Botcol[k] >= col - 1 && Botcol[k] <= col + 1)) {
-				for (int i = Botrow[k] - 1; i <= Botrow[k]; i++) {
-					for (int j = Botcol[k] - 1; j <= Botcol[k] + 1; j++)
-						map[i][j] = ' ';
-				}
-				score += 2;
-				botcount--;
-				for (int i = k; i < botcount; i++) {
-					Botrow[i] = Botrow[i + 1];
-					Botcol[i] = Botcol[i + 1];
-				}
-				return true;
-			}
-		}
-		break;
-	case LEFT:
-		for (int k = 0; k < 6; k++) {
-			if (map[Botrow[k]][Botcol[k]] == 'V' && col - 1 == Botcol[k] && (Botrow[k] >= row && Botrow[k] <= row + 1)) {
-				for (int i = Botrow[k] - 1; i <= Botrow[k]; i++) {
-					for (int j = Botcol[k] - 1; j <= Botcol[k] + 1; j++)
-						map[i][j] = ' ';
-				}
-				score += 2;
-				botcount--;
-				for (int i = k; i < botcount; i++) {
-					Botrow[i] = Botrow[i + 1];
-					Botcol[i] = Botcol[i + 1];
-				}
-				return true;
-			}
-		}
-		break;
-	case RIGHT:
-		for (int k = 0; k < 6; k++) {
-			if (map[Botrow[k]][Botcol[k]] == 'V' && col + 1 == Botcol[k] && (Botrow[k] >= row && Botrow[k] <= row + 1)) {
-				for (int i = Botrow[k] - 1; i <= Botrow[k]; i++) {
-					for (int j = Botcol[k] - 1; j <= Botcol[k] + 1; j++)
-						map[i][j] = ' ';
-				}
-				score += 2;
-				botcount--;
-				for (int i = k; i < botcount; i++) {
-					Botrow[i] = Botrow[i + 1];
-					Botcol[i] = Botcol[i + 1];
-				}
-				return true;
-			}
-		}
-		break;
 	}
-	return false;
+	if (iskilled) {
+		for (int i = Botrow[botnumber] - 1; i <= Botrow[botnumber]; i++) {
+			for (int j = Botcol[botnumber] - 1; j <= Botcol[botnumber] + 1; j++)
+				map[i][j] = ' ';
+		}
+		score += 2;
+		botcount--;
+		map[Laserrow[botnumber]][Lasercol[botnumber]] = ' ';
+		for (int i = botnumber; i < botcount; i++) {
+			Botrow[i] = Botrow[i + 1];
+			Botcol[i] = Botcol[i + 1];
+			Laserrow[i] = Laserrow[i + 1];
+			Lasercol[i] = Laserrow[i + 1];
+		}
+	}
+	return iskilled;
 }
 //sets target for the special bullet
 void moveSpecialbullet() {
@@ -498,24 +455,32 @@ void moveSpecialbullet() {
 void summonLaser() {
 	int rowdiff, coldiff;
 	for (int i = 0; i < botcount; i++) {
-		if (map[Botrow[i]][Botcol[i]] == 'V') {
+		if (Laserrow[i] == -1) {
 			rowdiff = Crow - Botrow[i];
 			coldiff = Ccol - Botcol[i];
 			while (rowdiff && coldiff) {
 				(rowdiff > 0) ? rowdiff-- : rowdiff++;
 				(coldiff > 0) ? coldiff-- : coldiff++;
 			}
-			if (coldiff  && !(rand() % 20)) {
-				if (coldiff < 0 && map[Botrow[i]][Botcol[i] - 2] == ' ')
-					map[Botrow[i]][Botcol[i] - 2] = '<';
-				else if (coldiff > 0 && map[Botrow[i]][Botcol[i] + 2] == ' ')
-					map[Botrow[i]][Botcol[i] + 2] = '>';
+			if (coldiff < 0 && map[Botrow[i]][Botcol[i] - 2] == ' ') {
+				map[Botrow[i]][Botcol[i] - 2] = '<';
+				Laserrow[i] = Botrow[i];
+				Lasercol[i] = Botcol[i] - 2;
 			}
-			else if (rowdiff  && !(rand() % 20)) {
-				if (rowdiff < 0 && map[Botrow[i] - 2][Botcol[i]] == ' ')
-					map[Botrow[i] - 2][Botcol[i]] = '^';
-				else if (rowdiff > 0 && map[Botrow[i] + 1][Botcol[i]] == ' ')
-					map[Botrow[i] + 1][Botcol[i]] = 'v';
+			else if (coldiff > 0 && map[Botrow[i]][Botcol[i] + 2] == ' ') {
+				map[Botrow[i]][Botcol[i] + 2] = '>';
+				Laserrow[i] = Botrow[i];
+				Lasercol[i] = Botcol[i] + 2;
+			}
+			else if (rowdiff < 0 && map[Botrow[i] - 2][Botcol[i]] == ' ') {
+				map[Botrow[i] - 2][Botcol[i]] = '^';
+				Laserrow[i] = Botrow[i] - 2;
+				Lasercol[i] = Botcol[i];
+			}
+			else if (rowdiff > 0 && map[Botrow[i] + 1][Botcol[i]] == ' ') {
+				map[Botrow[i] + 1][Botcol[i]] = 'v';
+				Laserrow[i] = Botrow[i] + 1;
+				Lasercol[i] = Botcol[i];
 			}
 		}
 	}
@@ -714,52 +679,74 @@ bool openDoor() {
 //moves the bullet per update
 void moveBullets()	 {
 	bool iskilled = false;
-	for (int row = 1; row < ROW - 1; row++) {
-		for (int col = 1; col < COL - 1; col++) {
-			if (map[row][col] == '^') {
-				map[row][col] = ' ';
-				iskilled = (row == Bulletrow[0] && col == Bulletcol[0]) ? killBot(UP, row - 1, col) : damagePlayer(row - 1, col);
-				if ((map[row - 1][col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
-					map[row - 1][col] = '^';
-					Bulletrow[0]--;
-				}
-				else {
-					Bulletrow[0] = -1;
-				}
+	for (int i = 0; i < botcount; i++) {
+		if (Laserrow[i] != -1) {
+			if (map[Laserrow[i]][Lasercol[i]] == '^') {
+				map[Laserrow[i]][Lasercol[i]] = ' ';
+				Laserrow[i]--;
+				if (!damagePlayer(Laserrow[i], Lasercol[i]) && map[Laserrow[i]][Lasercol[i]] == ' ')
+					map[Laserrow[i]][Lasercol[i]] = '^';
+				else
+					Laserrow[i] = -1;
 			}
-			else if (map[row][col] == '<') {
-				map[row][col] = ' ';
-				iskilled = (row == Bulletrow[0] && col == Bulletcol[0]) ? killBot(LEFT, row, col - 1) : damagePlayer(row, col - 1);
-				if ((map[row][col - 1] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled) {
-					map[row][col - 1] = '<';
-					Bulletcol[0]--;
-				}
-				else {
-					Bulletrow[0] = -1;
-				}
+			else if (map[Laserrow[i]][Lasercol[i]] == 'v') {
+				map[Laserrow[i]][Lasercol[i]] = ' ';
+				Laserrow[i]++;
+				if (!damagePlayer(Laserrow[i], Lasercol[i]) && map[Laserrow[i]][Lasercol[i]] == ' ')
+					map[Laserrow[i]][Lasercol[i]] = 'v';
+				else
+					Laserrow[i] = -1;
 			}
-			else if (map[ROW - 1 - row][COL - 1 - col] == 'v') {
-				map[ROW - 1 - row][COL - 1 - col] = ' ';
-				iskilled = (ROW - 1 - row == Bulletrow[0] && COL - 1 - col == Bulletcol[0]) ? killBot(DOWN, ROW - row, COL - 1 - col) : damagePlayer(ROW - row, COL - 1 - col);
-				if ((map[ROW - row][COL - 1 - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled){
-					map[ROW - row][COL - 1 - col] = 'v';
-					Bulletrow[0]++;
-				}
-				else {
-					Bulletrow[0] = -1;
-				}
+			else if (map[Laserrow[i]][Lasercol[i]] == '<') {
+				map[Laserrow[i]][Lasercol[i]] = ' ';
+				Lasercol[i]--;
+				if (!damagePlayer(Laserrow[i], Lasercol[i]) && map[Laserrow[i]][Lasercol[i]] == ' ')
+					map[Laserrow[i]][Lasercol[i]] = '<';
+				else
+					Laserrow[i] = -1;
 			}
-			else if (map[ROW - 1 - row][COL - 1 - col] == '>') {
-				map[ROW - 1 - row][COL - 1 - col] = ' ';
-				iskilled = (ROW - 1 - row == Bulletrow[0] && COL - 1 - col == Bulletcol[0]) ? killBot(RIGHT, ROW - 1 - row, COL - col) : damagePlayer(ROW - 1 - row, COL - col);
-				if ((map[ROW - 1 - row][COL - col] == ' ' && row != 0 && row != ROW - 1 && col != 0 && col != COL - 1) && !iskilled){
-					map[ROW - 1 - row][COL - col] = '>';
-					Bulletcol[0]++;
-				}
-				else {
-					Bulletrow[0] = -1;
-				}
+			else if (map[Laserrow[i]][Lasercol[i]] == '>') {
+				map[Laserrow[i]][Lasercol[i]] = ' ';
+				Lasercol[i]++;
+				if (!damagePlayer(Laserrow[i], Lasercol[i]) && map[Laserrow[i]][Lasercol[i]] == ' ')
+					map[Laserrow[i]][Lasercol[i]] = '>';
+				else
+					Laserrow[i] = -1;
 			}
+		}
+	}
+	if (Bulletrow[0] != -1) {
+		if (map[Bulletrow[0]][Bulletcol[0]] == '^') {
+			map[Bulletrow[0]][Bulletcol[0]] = ' ';
+			Bulletrow[0]--;
+			if (!killBot(UP, Bulletrow[0], Bulletcol[0]) && map[Bulletrow[0]][Bulletcol[0]] == ' ')
+				map[Bulletrow[0]][Bulletcol[0]] = '^';
+			else
+				Bulletrow[0] = -1;
+		}
+		else if (map[Bulletrow[0]][Bulletcol[0]] == 'v') {
+			map[Bulletrow[0]][Bulletcol[0]] = ' ';
+			Bulletrow[0]++;
+			if (!killBot(DOWN, Bulletrow[0], Bulletcol[0]) && map[Bulletrow[0]][Bulletcol[0]] == ' ')
+				map[Bulletrow[0]][Bulletcol[0]] = 'v';
+			else
+				Bulletrow[0] = -1;
+		}
+		else if (map[Bulletrow[0]][Bulletcol[0]] == '<') {
+			map[Bulletrow[0]][Bulletcol[0]] = ' ';
+			Bulletcol[0]--;
+			if (!killBot(LEFT, Bulletrow[0], Bulletcol[0]) && map[Bulletrow[0]][Bulletcol[0]] == ' ')
+				map[Bulletrow[0]][Bulletcol[0]] = '<';
+			else
+				Bulletrow[0] = -1;
+		}
+		else if (map[Bulletrow[0]][Bulletcol[0]] == '>') {
+			map[Bulletrow[0]][Bulletcol[0]] = ' ';
+			Bulletcol[0]++;
+			if (!killBot(RIGHT,Bulletrow[0], Bulletcol[0]) && map[Bulletrow[0]][Bulletcol[0]] == ' ')
+				map[Bulletrow[0]][Bulletcol[0]] = '>';
+			else
+				Bulletrow[0] = -1;
 		}
 	}
 }
