@@ -19,13 +19,13 @@ const char UP = 72, DOWN = 80, LEFT = 75, RIGHT = 77;
 //the size of map and stuff like bots and highscores
 const int ROW = 25, COL = 25, SCORES = 10, BOTS = 6;
 //current location of the player
+struct Bots {
+	int row, col, lrow, lcol;
+}bots[BOTS];
 int Crow, Ccol;
 int Brow, Bcol;
-int Botrow[BOTS], Botcol[BOTS];
-int Laserrow[BOTS], Lasercol[BOTS];
 int Bulletrow[2], Bulletcol[2];
-int score,botcount,lives;
-int shots = 0;
+int score,botcount,lives,shots;
 bool isspecialbullet = false;
 string name = "";
 int highscores[SCORES] = { 0 };
@@ -174,11 +174,11 @@ void summonBot(int count) {
 	bool isvalid;
 	for (int k = 0; k < count; k++) {
 		do{
-			Botrow[k] = 1 + (rand() % (ROW / 2));
-			Botcol[k] = 2 + (rand() % (COL - 1));
+			bots[k].row = 1 + (rand() % (ROW / 2));
+			bots[k].col = 2 + (rand() % (COL - 1));
 			isvalid = true;
-			for (int i = Botrow[k] - 2; i <= Botrow[k] + 1; i++) {
-				for (int j = Botcol[k] - 2; j <= Botcol[k] + 2; j++) {
+			for (int i = bots[k].row - 2; i <= bots[k].row + 1; i++) {
+				for (int j = bots[k].col - 2; j <= bots[k].col + 2; j++) {
 					if (map[i][j] != ' ') {
 						isvalid = false;
 						break;
@@ -186,7 +186,7 @@ void summonBot(int count) {
 				}
 			}
 		}while (!isvalid);
-		placeBot(Botrow[k], Botcol[k]);
+		placeBot(bots[k].row, bots[k].col);
 	}
 }
 //add initial items to the level according to level number
@@ -209,33 +209,33 @@ void addItems(int level) {
 	//for placing obstacles and bots according to level.
 	switch (level) {
 	case 1:
-		placeObstacle(3,2);
+		placeObstacle(3, 2);
 		summonBot(2);
 		botcount = 2;
 		break;
 	case 2:
-		placeObstacle(3,3);
+		placeObstacle(3, 3);
 		summonBot(3);
 		botcount = 3;
 		break;
 	case 3:
-		placeObstacle(4,3);
+		placeObstacle(4, 3);
 		summonBot(4);
 		botcount = 4;
 		break;
 	case 4:
-		placeObstacle(4,4);
+		placeObstacle(4, 4);
 		summonBot(5);
 		botcount = 5;
 		break;
 	case 5:
-		placeObstacle(5,4);
+		placeObstacle(5, 4);
 		summonBot(6);
 		botcount = 6;
 		break;
 	}
 	for (int i = 0; i < botcount; i++) {
-		Laserrow[i] = -1;
+		bots[i].lrow = -1;
 	}
 	//validating player spawn location
 	do {
@@ -371,27 +371,27 @@ bool killBot(char bulletdirection, int row, int col) {
 	bool iskilled = false;
 	int botnumber;
 	for (botnumber = 0; botnumber < botcount; botnumber++) {
-		if ((bulletdirection == UP && row == Botrow[botnumber] && (Botcol[botnumber] >= col - 1 && Botcol[botnumber] <= col + 1)) ||
-			(bulletdirection == DOWN && row + 1== Botrow[botnumber] && (Botcol[botnumber] >= col - 1 && Botcol[botnumber] <= col + 1)) ||
-			(bulletdirection == LEFT && col - 1 == Botcol[botnumber] && (Botrow[botnumber] >= row && Botrow[botnumber] <= row + 1)) ||
-			(bulletdirection == RIGHT && col + 1 == Botcol[botnumber] && (Botrow[botnumber] >= row && Botrow[botnumber] <= row + 1))) {
+		if ((bulletdirection == UP && row == bots[botnumber].row && (bots[botnumber].col >= col - 1 && bots[botnumber].col <= col + 1)) ||
+			(bulletdirection == DOWN && row + 1 == bots[botnumber].row && (bots[botnumber].col >= col - 1 && bots[botnumber].col <= col + 1)) ||
+			(bulletdirection == LEFT && col - 1 == bots[botnumber].col && (bots[botnumber].row >= row && bots[botnumber].row <= row + 1)) ||
+			(bulletdirection == RIGHT && col + 1 == bots[botnumber].col && (bots[botnumber].row >= row && bots[botnumber].row <= row + 1))) {
 			iskilled = true;
 			break;
 		}
 	}
 	if (iskilled) {
-		for (int i = Botcol[botnumber] - 1; i <= Botcol[botnumber] + 1; i++) {
-			map[Botrow[botnumber]][i] = ' ';
-			map[Botrow[botnumber] - 1][i] = ' ';
+		for (int i = bots[botnumber].col - 1; i <= bots[botnumber].col + 1; i++) {
+			map[bots[botnumber].row][i] = ' ';
+			map[bots[botnumber].row - 1][i] = ' ';
 		}
 		score += 2;
 		botcount--;
-		map[Laserrow[botnumber]][Lasercol[botnumber]] = ' ';
+		map[bots[botnumber].lrow][bots[botnumber].lcol] = ' ';
 		for (int i = botnumber; i < botcount; i++) {
-			Botrow[i] = Botrow[i + 1];
-			Botcol[i] = Botcol[i + 1];
-			Laserrow[i] = Laserrow[i + 1];
-			Lasercol[i] = Lasercol[i + 1];
+			bots[i].row = bots[i + 1].row;
+			bots[i].col = bots[i + 1].col;
+			bots[i].lrow = bots[i + 1].lrow;
+			bots[i].lcol = bots[i + 1].lcol;
 		}
 	}
 	return iskilled;
@@ -404,16 +404,16 @@ void moveSpecialbullet() {
 	int min = INT_MAX;
 	int targetbot = 0;
 	for (int i = 0; i < botcount; i++) {
-		rowdiff = Botrow[i] - Bulletrow[1];
-		coldiff = Botcol[i] - Bulletcol[1];
+		rowdiff = bots[i].row - Bulletrow[1];
+		coldiff = bots[i].col - Bulletcol[1];
 		if (rowdiff * rowdiff + coldiff * coldiff < min) {
 			min = rowdiff * rowdiff + coldiff * coldiff;
 			targetbot = i;
 		}
 	}
 	bool iskilled = false;
-	rowdiff = Botrow[targetbot] - Bulletrow[1];
-	coldiff = Botcol[targetbot] - Bulletcol[1];
+	rowdiff = bots[targetbot].row - Bulletrow[1];
+	coldiff = bots[targetbot].col - Bulletcol[1];
 	if (rowdiff > 0) {
 		map[Bulletrow[1]][Bulletcol[1]] = ' ';
 		Bulletrow[1]++;
@@ -455,32 +455,32 @@ void moveSpecialbullet() {
 void summonLaser() {
 	int rowdiff, coldiff;
 	for (int i = 0; i < botcount; i++) {
-		if (Laserrow[i] == -1) {
-			rowdiff = Crow - Botrow[i];
-			coldiff = Ccol - Botcol[i];
+		if (bots[i].lrow == -1) {
+			rowdiff = Crow - bots[i].row;
+			coldiff = Ccol - bots[i].col;
 			while (rowdiff && coldiff) {
 				(rowdiff > 0) ? rowdiff-- : rowdiff++;
 				(coldiff > 0) ? coldiff-- : coldiff++;
 			}
-			if (coldiff < 0 && map[Botrow[i]][Botcol[i] - 2] == ' ') {
-				map[Botrow[i]][Botcol[i] - 2] = '<';
-				Laserrow[i] = Botrow[i];
-				Lasercol[i] = Botcol[i] - 2;
+			if (coldiff < 0 && map[bots[i].row][bots[i].col - 2] == ' ') {
+				map[bots[i].row][bots[i].col - 2] = '<';
+				bots[i].lrow = bots[i].row;
+				bots[i].lcol = bots[i].col - 2;
 			}
-			else if (coldiff > 0 && map[Botrow[i]][Botcol[i] + 2] == ' ') {
-				map[Botrow[i]][Botcol[i] + 2] = '>';
-				Laserrow[i] = Botrow[i];
-				Lasercol[i] = Botcol[i] + 2;
+			else if (coldiff > 0 && map[bots[i].row][bots[i].col + 2] == ' ') {
+				map[bots[i].row][bots[i].col + 2] = '>';
+				bots[i].lrow = bots[i].row;
+				bots[i].lcol = bots[i].col + 2;
 			}
-			else if (rowdiff < 0 && map[Botrow[i] - 2][Botcol[i]] == ' ') {
-				map[Botrow[i] - 2][Botcol[i]] = '^';
-				Laserrow[i] = Botrow[i] - 2;
-				Lasercol[i] = Botcol[i];
+			else if (rowdiff < 0 && map[bots[i].row - 2][bots[i].col] == ' ') {
+				map[bots[i].row - 2][bots[i].col] = '^';
+				bots[i].lrow = bots[i].row - 2;
+				bots[i].lcol = bots[i].col;
 			}
-			else if (rowdiff > 0 && map[Botrow[i] + 1][Botcol[i]] == ' ') {
-				map[Botrow[i] + 1][Botcol[i]] = 'v';
-				Laserrow[i] = Botrow[i] + 1;
-				Lasercol[i] = Botcol[i];
+			else if (rowdiff > 0 && map[bots[i].row + 1][bots[i].col] == ' ') {
+				map[bots[i].row + 1][bots[i].col] = 'v';
+				bots[i].lrow = bots[i].row + 1;
+				bots[i].lcol = bots[i].col;
 			}
 		}
 	}
@@ -604,52 +604,52 @@ void moveBots() {
 	bool isvalidmove = false;
 	int rowdiff, coldiff;
 	for (int i = 0; i < botcount; i++) {
-		if (map[Botrow[i]][Botcol[i]] == 'V') {
-			rowdiff = Crow - Botrow[i];
-			coldiff = Ccol - Botcol[i];
+		if (map[bots[i].row][bots[i].col] == 'V') {
+			rowdiff = Crow - bots[i].row;
+			coldiff = Ccol - bots[i].col;
 			while (rowdiff && coldiff) {
 				(rowdiff > 0) ? rowdiff-- : rowdiff++;
 				(coldiff > 0) ? coldiff-- : coldiff++;
 			}
 			if (coldiff) {
 				if (coldiff < 0) {
-					damagePlayer(Botrow[i], Botcol[i] - 2);
-					if (map[Botrow[i] - 1][Botcol[i] - 2] == ' ' && map[Botrow[i]][Botcol[i] - 2] == ' ') {
-						map[Botrow[i] - 1][Botcol[i] + 1] = ' ';
-						map[Botrow[i]][Botcol[i] + 1] = ' ';
-						Botcol[i]--;
-						placeBot(Botrow[i], Botcol[i]);
+					damagePlayer(bots[i].row, bots[i].col - 2);
+					if (map[bots[i].row - 1][bots[i].col - 2] == ' ' && map[bots[i].row][bots[i].col - 2] == ' ') {
+						map[bots[i].row - 1][bots[i].col + 1] = ' ';
+						map[bots[i].row][bots[i].col + 1] = ' ';
+						bots[i].col--;
+						placeBot(bots[i].row, bots[i].col);
 					}
 				}
 				else if (coldiff > 0){
-					damagePlayer(Botrow[i], Botcol[i] + 2);
-					if (map[Botrow[i] - 1][Botcol[i] + 2] == ' ' && map[Botrow[i]][Botcol[i] + 2] == ' ') {
-						map[Botrow[i] - 1][Botcol[i] - 1] = ' ';
-						map[Botrow[i]][Botcol[i] - 1] = ' ';
-						Botcol[i]++;
-						placeBot(Botrow[i], Botcol[i]);
+					damagePlayer(bots[i].row, bots[i].col + 2);
+					if (map[bots[i].row - 1][bots[i].col + 2] == ' ' && map[bots[i].row][bots[i].col + 2] == ' ') {
+						map[bots[i].row - 1][bots[i].col - 1] = ' ';
+						map[bots[i].row][bots[i].col - 1] = ' ';
+						bots[i].col++;
+						placeBot(bots[i].row, bots[i].col);
 					}
 				}
 			}
 			else if (rowdiff) {
 				if (rowdiff < 0){
-					damagePlayer(Botrow[i] - 2, Botcol[i]);
-					if (map[Botrow[i] - 2][Botcol[i] - 1] == ' ' && map[Botrow[i] - 2][Botcol[i]] == ' ' && map[Botrow[i] - 2][Botcol[i] + 1] == ' ') {
-						map[Botrow[i]][Botcol[i] - 1] = ' ';
-						map[Botrow[i]][Botcol[i]] = ' ';
-						map[Botrow[i]][Botcol[i] + 1] = ' ';
-						Botrow[i]--;
-						placeBot(Botrow[i], Botcol[i]);
+					damagePlayer(bots[i].row - 2, bots[i].col);
+					if (map[bots[i].row - 2][bots[i].col - 1] == ' ' && map[bots[i].row - 2][bots[i].col] == ' ' && map[bots[i].row - 2][bots[i].col + 1] == ' ') {
+						map[bots[i].row][bots[i].col - 1] = ' ';
+						map[bots[i].row][bots[i].col] = ' ';
+						map[bots[i].row][bots[i].col + 1] = ' ';
+						bots[i].row--;
+						placeBot(bots[i].row, bots[i].col);
 					}
 				}
 				else if (rowdiff > 0){
-					damagePlayer(Botrow[i] + 1, Botcol[i]);
-					if (map[Botrow[i] + 1][Botcol[i] - 1] == ' ' && map[Botrow[i] + 1][Botcol[i]] == ' ' && map[Botrow[i] + 1][Botcol[i] + 1] == ' ') {
-						map[Botrow[i] - 1][Botcol[i] - 1] = ' ';
-						map[Botrow[i] - 1][Botcol[i]] = ' ';
-						map[Botrow[i] - 1][Botcol[i] + 1] = ' ';
-						Botrow[i]++;
-						placeBot(Botrow[i], Botcol[i]);
+					damagePlayer(bots[i].row + 1, bots[i].col);
+					if (map[bots[i].row + 1][bots[i].col - 1] == ' ' && map[bots[i].row + 1][bots[i].col] == ' ' && map[bots[i].row + 1][bots[i].col + 1] == ' ') {
+						map[bots[i].row - 1][bots[i].col - 1] = ' ';
+						map[bots[i].row - 1][bots[i].col] = ' ';
+						map[bots[i].row - 1][bots[i].col + 1] = ' ';
+						bots[i].row++;
+						placeBot(bots[i].row, bots[i].col);
 					}
 				}
 			}
@@ -680,38 +680,38 @@ bool openDoor() {
 void moveBullets()	 {
 	bool iskilled = false;
 	for (int i = 0; i < botcount; i++) {
-		if (Laserrow[i] != -1) {
-			if (map[Laserrow[i]][Lasercol[i]] == '^') {
-				map[Laserrow[i]][Lasercol[i]] = ' ';
-				Laserrow[i]--;
-				if (!damagePlayer(Laserrow[i], Lasercol[i]) && map[Laserrow[i]][Lasercol[i]] == ' ')
-					map[Laserrow[i]][Lasercol[i]] = '^';
+		if (bots[i].lrow != -1) {
+			if (map[bots[i].lrow][bots[i].col] == '^') {
+				map[bots[i].lrow][bots[i].lcol] = ' ';
+				bots[i].lrow--;
+				if (!damagePlayer(bots[i].lrow, bots[i].lcol) && map[bots[i].lrow][bots[i].lcol] == ' ')
+					map[bots[i].lrow][bots[i].lcol] = '^';
 				else
-					Laserrow[i] = -1;
+					bots[i].lrow = -1;
 			}
-			else if (map[Laserrow[i]][Lasercol[i]] == 'v') {
-				map[Laserrow[i]][Lasercol[i]] = ' ';
-				Laserrow[i]++;
-				if (!damagePlayer(Laserrow[i], Lasercol[i]) && map[Laserrow[i]][Lasercol[i]] == ' ')
-					map[Laserrow[i]][Lasercol[i]] = 'v';
+			else if (map[bots[i].lrow][bots[i].lcol] == 'v') {
+				map[bots[i].lrow][bots[i].lcol] = ' ';
+				bots[i].lrow++;
+				if (!damagePlayer(bots[i].lrow, bots[i].lcol) && map[bots[i].lrow][bots[i].lcol] == ' ')
+					map[bots[i].lrow][bots[i].lcol] = 'v';
 				else
-					Laserrow[i] = -1;
+					bots[i].lrow = -1;
 			}
-			else if (map[Laserrow[i]][Lasercol[i]] == '<') {
-				map[Laserrow[i]][Lasercol[i]] = ' ';
-				Lasercol[i]--;
-				if (!damagePlayer(Laserrow[i], Lasercol[i]) && map[Laserrow[i]][Lasercol[i]] == ' ')
-					map[Laserrow[i]][Lasercol[i]] = '<';
+			else if (map[bots[i].lrow][bots[i].lcol] == '<') {
+				map[bots[i].lrow][bots[i].lcol] = ' ';
+				bots[i].lcol--;
+				if (!damagePlayer(bots[i].lrow, bots[i].lcol) && map[bots[i].lrow][bots[i].lcol] == ' ')
+					map[bots[i].lrow][bots[i].lcol] = '<';
 				else
-					Laserrow[i] = -1;
+					bots[i].lrow = -1;
 			}
-			else if (map[Laserrow[i]][Lasercol[i]] == '>') {
-				map[Laserrow[i]][Lasercol[i]] = ' ';
-				Lasercol[i]++;
-				if (!damagePlayer(Laserrow[i], Lasercol[i]) && map[Laserrow[i]][Lasercol[i]] == ' ')
-					map[Laserrow[i]][Lasercol[i]] = '>';
+			else if (map[bots[i].lrow][bots[i].lcol] == '>') {
+				map[bots[i].lrow][bots[i].lcol] = ' ';
+				bots[i].lcol++;
+				if (!damagePlayer(bots[i].lrow, bots[i].lcol) && map[bots[i].lrow][bots[i].lcol] == ' ')
+					map[bots[i].lrow][bots[i].lcol] = '>';
 				else
-					Laserrow[i] = -1;
+					bots[i].lrow = -1;
 			}
 		}
 	}
@@ -789,7 +789,7 @@ void game() {
 			bossmovetick++;
 			bossmovetick %= static_cast<int>(2 / pow(1.25, i));
 			if(!bossmovetick)
-				moveBoss();
+				//moveBoss();
 			botmovetick++;
 			botmovetick %= static_cast<int>(5 / pow(1.1,i));
 			if(!botmovetick)
